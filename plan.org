@@ -1,0 +1,32 @@
+* Obtaining data
+** OpenCV works with suitable webcam
+** May need to consider other sources - i.e. CCTV as flash video, etc.
+* Image matching
+** OpenCV uses contour detection to get digit boundaries
+** No angle fixing implemented yet
+* Image manipulation
+** OpenCV drops to binary image quite nicely
+** Pylab handles enlarging of necessary images (may also need shrinking)
+** Could implement superresolution?
+** Cropping not yet implemented
+* Digit identification
+** Scikit SVM failed with 1 training set
+** Currently use pixel testing but want method that can sum evidence
+** SVM may be better in the long run, for different sizes/orientation
+** Also consider neural networks, Markov models,  maybe Gaussian processes?
+** Currently require separate classifier for every size
+* Recombining data
+** Each digit is identified successfully, this should be trivial
+
+* Plan:
+* TODO Write script for getting more training sets
+** Use cropping to take contours left to right (eliminating bad aspect ratio, noise, etc.), then can automate with known examples
+** This may not be possible in Mexico though
+* TODO Try other classification methods
+** Retry SVM?
+** Get at least one evidence-summing approach to work
+* TODO Try implementing super-resolution imaging
+* TODO Investigate use of multiple cameras
+* TODO Investigate image matching
+* TODO Investigate limiting size, noise, etc.
+* TODO Make more realistic simulation of machine (PyGame?)
