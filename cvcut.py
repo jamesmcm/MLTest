@@ -27,6 +27,7 @@ contours, hierarchy = cv2.findContours(a, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_TC
 #cv2.drawContours(mask, contours, 1, 100)
 #cv2.drawContours(mask, contours, 2, 100)
 dlist=[]
+output=np.zeros(b.shape,dtype=np.uint8)
 for cont in contours:
 
     br=cv2.boundingRect(cont)
@@ -39,9 +40,11 @@ for cont in contours:
         charray=temp.copy()
         charray=imresize(charray, (70,50))
         dlist.append(charray)
+        output[br[1]:br[1]+br[3], br[0]:br[0]+br[2]]=b[br[1]:br[1]+br[3], br[0]:br[0]+br[2]]
+        cv2.rectangle(output, (br[0],br[1]), (br[0]+br[2],br[1]+br[3]), 255)
     #print temp.shape
     #dlist=dlist[1:-1]
-#cv2.imwrite("chartest1r.png", dlist[0])
+cv2.imwrite("readout.png", output)
 #sys.exit()
 #for item in dlist:  
     #dlist[0].resize((70,50))
@@ -50,7 +53,7 @@ for cont in contours:
     #print item.shape
     #raw_input()
 
-
+sys.exit()
 
 # ML part: scikit training
 # from sklearn import svm

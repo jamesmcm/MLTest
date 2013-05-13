@@ -5,4 +5,4 @@ from time import sleep
 raw_input("Waiting...")
 cap = cv2.VideoCapture(0)
 ret,im = cap.read() 
-cv2.imwrite("test2.png", im)
+cv2.imwrite("data/test3.png", im)
