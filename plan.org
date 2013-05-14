@@ -19,6 +19,9 @@
 ** Each digit is identified successfully, this should be trivial
 
 * Plan:
+* DONE Write method which sums up pixel appearance in training set, then sums scores over this for test set
+** Can plot classifier as grey-scale image somehow
+* DONE Write code in to functions/classes
 * TODO Write script for getting more training sets
 ** Use cropping to take contours left to right (eliminating bad aspect ratio, noise, etc.), then can automate with known examples
 ** This may not be possible in Mexico though
@@ -30,3 +33,6 @@
 * TODO Investigate image matching
 * TODO Investigate limiting size, noise, etc.
 * TODO Make more realistic simulation of machine (PyGame?)
+* TODO Test data logging in real-time - need fixed position
+* TODO Write documents
+** We need also to write the manual, limitation, regulation, adventages, disvantages, etc
