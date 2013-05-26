@@ -19,6 +19,7 @@
 ** Each digit is identified successfully, this should be trivial
 
 * Plan:
+* TODO Use running average of frames to determine likely correct digits and known number of digits
 * DONE Add using line conoturs to remove bg that is in rectangle of digit
 * DONE Use starting position of contour to eliminate side noise contours
 * TODO Sort out functions
