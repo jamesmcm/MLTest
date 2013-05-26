@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import sys
+from time import sleep
 import pickle
 from scipy.misc import imresize
 np.set_printoptions(threshold='nan')
@@ -12,10 +13,10 @@ dsize=(40,30)
 esize=dsize[0]*dsize[1]
 
 
-def extractdigits(filename):
-    a=cv2.imread(filename, 0)
+def extractdigits(a):
+    #a=cv2.imread(filename, 0)
     #print a.shape
-    a=a[:,1000:1450]
+    #a=a[:,1000:1450]
     #cv2.namedWindow("newtest")
     #cv2.imshow("newtest",a)
     a=cv2.GaussianBlur(a,(3,3), 0)
@@ -29,8 +30,8 @@ def extractdigits(filename):
 
     #a=cv2.bitwise_not(a)
 
-    cv2.imshow("newtest",a)
-    cv2.waitKey(0)
+    #cv2.imshow("newtest",a)
+    #cv2.waitKey(1)
     #sys.exit()
     #raw_input()
 
@@ -62,8 +63,8 @@ def extractdigits(filename):
             #(thresh, temp) = cv2.threshold(temp, 100, 255, cv2.THRESH_BINARY)
             temp=cv2.bitwise_not(temp)
             temp2=temp.copy()
-            cv2.imshow("newtest",temp)
-            cv2.waitKey(0)
+            #cv2.imshow("newtest",temp)
+            #cv2.waitKey(0)
             #contours2, hierarchy = cv2.findContours(temp2, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_TC89_KCOS)
             contours2, hierarchy = cv2.findContours(temp2, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
             for cont2 in contours2:
@@ -74,7 +75,7 @@ def extractdigits(filename):
                 # cv2.waitKey(0)
 
 
-                if br2[3]<dsize[0]+10 and br2[3]>dsize[0]-10 and br2[2]<dsize[1]+10 and br2[2]>dsize[1]-20 and br2[0]>0+(temp.shape[1]/20) and br2[0]<temp.shape[1]-(temp.shape[1]/5):
+                if br2[3]<dsize[0]+10 and br2[3]>dsize[0]-10 and br2[2]<dsize[1]+10 and br2[2]>dsize[1]-20 and br2[0]>0+(temp.shape[1]/30) and br2[0]<temp.shape[1]-(temp.shape[1]/5):
                     mask = np.zeros(temp2.shape, dtype=np.uint8)
                     cv2.drawContours(mask,[cont2],0,255,-1)
                     temp2=temp.copy()
@@ -83,12 +84,12 @@ def extractdigits(filename):
                     temp3=temp2[br2[1]:br2[1]+br2[3], br2[0]:br2[0]+br2[2]]
                     charray=temp3.copy()
                     charray=imresize(charray, dsize)
-                    dlist.append(charray)
+                    dlist.append((charray, br[0]+br2[0], br[1]))
 
 
-                    print temp3.shape
-                    cv2.imshow("newtest", temp3)
-                    cv2.waitKey(0)
+                    #print temp3.shape
+                    #cv2.imshow("newtest", temp3)
+                    #cv2.waitKey(0)
             
                 #if br2[2]>10 and br2[3]>10:
                     #cv2.rectangle(temp, (br2[0],br2[1]), (br2[0]+br2[2],br2[1]+br2[3]), 255)
@@ -320,6 +321,62 @@ def sumpmtest2(classifierfile, dlist):
         cv2.imshow("newtest",item)
         cv2.waitKey(0)
 
+def sumpmtestlive(classifierfile, dlist):
+    f=open(classifierfile,"r")
+    tdict=pickle.load(f)
+    f.close()
+    rl={}
+
+    for item2 in dlist:
+        item=item2[0]
+        q=False
+        data = np.zeros((esize), dtype=np.uint8)
+    #results=[]
+    #err=[]
+        data=item.flatten()
+        boolarray=(data>pixelthreshold)
+        resultd=[]
+        #print tdict.keys()
+        for j in range(len(tdict.keys())):
+            result=np.sum(tdict[j][boolarray])
+            #penalisation factor
+            result-=4*np.sum(tdict[j][data<=pixelthreshold])
+            resultd.append(result/float(esize))
+        #print resultd
+        # sr=reversed(sorted(resultd))
+        # srlist=[]
+        # for j in sr:
+        #     srlist.append(j)
+        # err.append(srlist[0]-srlist[1])
+        resultf=(resultd.index(max(resultd)))
+        #print resultf
+        if max(resultd)<-0.1:
+            #print "IGNORE!"
+            q=True
+
+        #print "---"
+        #cv2.imshow("newtest",item)
+        #cv2.waitKey(0)
+        #Append digit to correct place
+        #rl = {y:{x:(1,q)}}
+
+        if item2[2] in rl.keys():
+            rl[item2[2]][item2[1]]=(resultf, q)
+        else:
+            rl[item2[2]]={item2[1]:(resultf,q)}
+
+    string=""
+    for key in sorted(rl.iterkeys()):
+        #print "%s: %s" % (key, mydict[key]) 
+
+        for key2 in sorted(rl[key].iterkeys()):
+            if rl[key][key2][1]==False:
+                string+=str(rl[key][key2][0])
+            #if rl[key][key2][1]==True:
+                #string+="?"
+        string+=" "
+
+    print string
 
 def plotsumpkl(tdictfile):
     f=open(tdictfile,"r")
@@ -339,13 +396,27 @@ if __name__=="__main__":
     #main here
     # dlist=extractdigits("data/test1.png")
     # sols=np.array([5,2,1,0,7,4,3,8,6,9])
-    
+    cap = cv2.VideoCapture(0)
+    cap.set(3,1920)
+    cap.set(4,1080)
+    ret,a = cap.read()
     # dlist=extractdigits("data/test2.png")
     # sols=np.array([2,1,0,7,5,4,3,9,8,6])
     # sumpmtrain(dlist, sols, "tdictsum.pkl")
-    dlist=extractdigits("data/camtest7.png")
-    #sumpmtrain2(dlist, "tdictsumnew.pkl")
-    sumpmtest2("tdictsumnew.pkl", dlist)
+    while True:
+    #a=cv2.imread("data/camtest8.png", 0)
+    #print a.shape
+        ret,a = cap.read()
+        a = cv2.cvtColor(a,cv2.COLOR_BGR2GRAY)
+
+        a=a[:800,1000:1450]
+
+        dlist=extractdigits(a)
+        #sumpmtrain2(dlist, "tdictsumnew.pkl")
+        #sumpmtest2("tdictsumnew.pkl", dlist)
+        sumpmtestlive("tdictsumnew.pkl", dlist)
+        #if cv2.waitKey(2000) == 27:
+            #break
     #plotsumpkl("tdictsum.pkl")
     #pmtrain(dlist, sols, "tdict.pkl")
     #pmtest("tdict.pkl", dlist)

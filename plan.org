@@ -19,9 +19,20 @@
 ** Each digit is identified successfully, this should be trivial
 
 * Plan:
+* DONE Add using line conoturs to remove bg that is in rectangle of digit
+* DONE Use starting position of contour to eliminate side noise contours
+* TODO Sort out functions
+* TODO Look up how to do live capture
+* TODO Sort out threshold
+* TODO Find position for camera
+* TODO To get out of bubble writing - take contours, then not the contours and then split the digits
+* TODO Clearly separate training from image set, from live testing functions
 * DONE Write method which sums up pixel appearance in training set, then sums scores over this for test set
 ** Can plot classifier as grey-scale image somehow
 * DONE Write code in to functions/classes
+* TODO Write function which displays contours, asks for digit shown/invalid
+* TODO Write function to get webcam live
+* DONE Set up external webcam
 * TODO Write script for getting more training sets
 ** Use cropping to take contours left to right (eliminating bad aspect ratio, noise, etc.), then can automate with known examples
 ** This may not be possible in Mexico though
@@ -32,7 +43,12 @@
 * TODO Investigate use of multiple cameras
 * TODO Investigate image matching
 * TODO Investigate limiting size, noise, etc.
-* TODO Make more realistic simulation of machine (PyGame?)
+* DONE Make more realistic simulation of machine (PyGame?)
 * TODO Test data logging in real-time - need fixed position
 * TODO Write documents
 ** We need also to write the manual, limitation, regulation, adventages, disvantages, etc
+* TODO Difficult problems
+** Unknown number of digits i.e. 70->140
+** Kerning pushing digits together?
+** Cannot vary size and spacing in reality
+** How to obtain training set in reality
