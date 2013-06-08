@@ -47,21 +47,33 @@ class gui:
         self.figure=Figure()
         self.axis=self.figure.add_subplot(111)
         self.cap = cv2.VideoCapture(self.devicenumcb.get_active())
-        
+
+
+    #General functions
     def btnclicked(self, widget):
-        fdict={"resbtn":self.setResolution()}
-        fdict[gtk.Buildable.get_name(widget)]
+        call=gtk.Buildable.get_name(widget)
+        if call=="resbtn":
+            self.setResolution()
+        elif call=="imagesavebtn":
+            self.saveImage()
 
     def openWindow(self, widget):
+
         #Make dict of widgets to functions
-        fdict={"opencameraconfig":self.openCameraConfig()}
-        fdict[gtk.Buildable.get_name(widget)]
+        call=gtk.Buildable.get_name(widget)
+        if call=="opencameraconfig":
+            self.openCameraConfig()
+        elif call=="openimagesave": 
+            self.builder.get_object("imagesavewindow").set_visible(1)
 
     def closeWindow(self,widget):
-        fdict={"closecameraconfig":self.applyCameraConfig()}
-        fdict[gtk.Buildable.get_name(widget)]
+        call=gtk.Buildable.get_name(widget)
+        if call=="closecameraconfig":
+            self.applyCameraConfig()
+        elif call=="imagesaveclosebtn":
+            self.builder.get_object("imagesavewindow").set_visible(0)
 
-        pass
+    #Camera config functions
     def openCameraConfig(self):
         try:
             self.builder.get_object("ccimgbox").remove(self.canvas)
@@ -101,6 +113,12 @@ class gui:
         self.cap.set(4,int(y))
         self.openCameraConfig()
 
+
+    def saveImage(self):
+        fname=self.builder.get_object("imagesavetext").get_text()
+        if fname!="" or None:
+            ret,im=self.cap.read()
+            cv2.imwrite(fname,im)
 
 
 #Main loop:

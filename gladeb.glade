@@ -8,12 +8,12 @@
     <property name="urgency_hint">True</property>
     <property name="deletable">False</property>
     <child>
-      <object class="GtkVBox" id="box2">
+      <object class="GtkBox" id="box2">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="orientation">vertical</property>
         <child>
-          <object class="GtkHBox" id="box3">
+          <object class="GtkBox" id="box3">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <child>
@@ -29,7 +29,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkVBox" id="combospace">
+              <object class="GtkBox" id="combospace">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="orientation">vertical</property>
@@ -51,7 +51,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkHBox" id="box4">
+          <object class="GtkBox" id="box4">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <child>
@@ -138,7 +138,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkVBox" id="ccimgbox">
+          <object class="GtkBox" id="ccimgbox">
             <property name="width_request">640</property>
             <property name="height_request">480</property>
             <property name="visible">True</property>
@@ -177,7 +177,7 @@
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <child>
-      <object class="GtkTable" id="grid1">
+      <object class="GtkGrid" id="grid1">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="row_homogeneous">True</property>
@@ -200,12 +200,13 @@ Configuration</property>
           </packing>
         </child>
         <child>
-          <object class="GtkButton" id="button2">
+          <object class="GtkButton" id="openimagesave">
             <property name="label" translatable="yes">Capture
 Image</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
+            <signal name="clicked" handler="openwindow" swapped="no"/>
           </object>
           <packing>
             <property name="left_attach">1</property>
@@ -215,12 +216,13 @@ Image</property>
           </packing>
         </child>
         <child>
-          <object class="GtkButton" id="button3">
+          <object class="GtkButton" id="openrecordvideo">
             <property name="label" translatable="yes">Record
 Video</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
+            <signal name="clicked" handler="openwindow" swapped="no"/>
           </object>
           <packing>
             <property name="left_attach">2</property>
@@ -344,6 +346,61 @@ Configuration</property>
         </child>
         <child>
           <placeholder/>
+        </child>
+      </object>
+    </child>
+  </object>
+  <object class="GtkWindow" id="imagesavewindow">
+    <property name="can_focus">False</property>
+    <property name="title" translatable="yes">Save captured image</property>
+    <property name="modal">True</property>
+    <property name="deletable">False</property>
+    <child>
+      <object class="GtkBox" id="box1">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="orientation">vertical</property>
+        <child>
+          <object class="GtkEntry" id="imagesavetext">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="invisible_char">●</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="imagesavebtn">
+            <property name="label">gtk-save</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <property name="use_stock">True</property>
+            <signal name="clicked" handler="btnclicked" swapped="no"/>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="imagesaveclosebtn">
+            <property name="label">gtk-close</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <property name="use_stock">True</property>
+            <signal name="clicked" handler="closewindow" swapped="no"/>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">2</property>
+          </packing>
         </child>
       </object>
     </child>

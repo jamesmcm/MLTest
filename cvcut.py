@@ -9,8 +9,10 @@ pixelthreshold=0 #for sum method
 #dsize=(70,50)
 #esize=70*50
 
-dsize=(40,30)
+#dsize=(40,30)
+dsize=(80,50)
 esize=dsize[0]*dsize[1]
+
 
 
 def extractdigits(a):
@@ -26,12 +28,13 @@ def extractdigits(a):
     #(thresh, a) = cv2.threshold(a, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
 
 
-    a=cv2.adaptiveThreshold(a, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 17, 2)
+    a=cv2.adaptiveThreshold(a, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 25, 7)
 
     #a=cv2.bitwise_not(a)
 
     #cv2.imshow("newtest",a)
-    #cv2.waitKey(1)
+    #cv2.imwrite("readout2.png", a)
+    #cv2.waitKey(0)
     #sys.exit()
     #raw_input()
 
@@ -51,13 +54,14 @@ def extractdigits(a):
 
         br=cv2.boundingRect(cont)
         #print br
-        cv2.rectangle(b, (br[0],br[1]), (br[0]+br[2],br[1]+br[3]), 255)
+        #cv2.rectangle(b, (br[0],br[1]), (br[0]+br[2],br[1]+br[3]), 255)
         charray=np.zeros(dsize, dtype=np.uint8)
         temp=b[br[1]:br[1]+br[3], br[0]:br[0]+br[2]]
         #cv2.imshow("newtest",temp)
         #cv2.waitKey(0)
 
-        if (temp.shape[0]>0.9*dsize[0] and temp.shape[0]<=2*dsize[0] and temp.shape[1]>0.9*dsize[1] and temp.shape[1]<=5*dsize[1]):
+        #if (temp.shape[0]>0.5*dsize[0] and temp.shape[0]<=3*dsize[0] and temp.shape[1]>0.5*dsize[1] and temp.shape[1]<=5*dsize[1]):
+        if temp.shape[0]>30 and temp.shape[1]>30:
             #print temp.shape
             #charray[:temp.shape[0],:temp.shape[1]]=temp
             #(thresh, temp) = cv2.threshold(temp, 100, 255, cv2.THRESH_BINARY)
@@ -74,8 +78,8 @@ def extractdigits(a):
                 # print temp3.shape
                 # cv2.waitKey(0)
 
-
-                if br2[3]<dsize[0]+10 and br2[3]>dsize[0]-10 and br2[2]<dsize[1]+10 and br2[2]>dsize[1]-20 and br2[0]>0+(temp.shape[1]/30) and br2[0]<temp.shape[1]-(temp.shape[1]/5):
+                #                if br2[3]<dsize[0]+10 and br2[3]>dsize[0]-10 and br2[2]<dsize[1]+10 and br2[2]>dsize[1]-20 and br2[0]>0+(temp.shape[1]/30) and br2[0]<temp.shape[1]-(temp.shape[1]/5):
+                if br2[3]<dsize[0]+10 and br2[3]>dsize[0]-10 and br2[2]<dsize[1]+10 and br2[2]>dsize[1]-50 and br2[0]>0+(temp.shape[1]/30) and br2[0]<temp.shape[1]-(temp.shape[1]/5):
                     mask = np.zeros(temp2.shape, dtype=np.uint8)
                     cv2.drawContours(mask,[cont2],0,255,-1)
                     temp2=temp.copy()
@@ -91,9 +95,9 @@ def extractdigits(a):
                     #cv2.imshow("newtest", temp3)
                     #cv2.waitKey(0)
             
-                #if br2[2]>10 and br2[3]>10:
-                    #cv2.rectangle(temp, (br2[0],br2[1]), (br2[0]+br2[2],br2[1]+br2[3]), 255)
-
+                    if br2[2]>10 and br2[3]>10:
+                        cv2.rectangle(b, (br[0]+br2[0],br[1]+br2[1]), (br[0]+br2[0]+br2[2],br[1]+br2[1]+br2[3]), 100)
+        
 
             
             # charray=temp.copy()
@@ -103,9 +107,10 @@ def extractdigits(a):
             #cv2.rectangle(output, (br[0],br[1]), (br[0]+br[2],br[1]+br[3]), 255)
         #print temp.shape
         #dlist=dlist[1:-1]
-    #cv2.imwrite("readout.png", output)
-    #cv2.imshow("newtest",b)
-    #cv2.waitKey(0)
+    print "test"
+    cv2.imwrite("readout.png", b)
+    #cv2.imshow("newtest",a)
+    cv2.waitKey(0)
 
     # for item in dlist:  
     #     dlist[0].resize(dsize)
@@ -395,26 +400,32 @@ def plotsumpkl(tdictfile):
 if __name__=="__main__":
     #main here
     # dlist=extractdigits("data/test1.png")
+
     # sols=np.array([5,2,1,0,7,4,3,8,6,9])
-    cap = cv2.VideoCapture(0)
-    cap.set(3,1920)
-    cap.set(4,1080)
-    ret,a = cap.read()
-    # dlist=extractdigits("data/test2.png")
+    # cap = cv2.VideoCapture(0)
+    # cap.set(3,1920)
+    # cap.set(4,1080)
+    # ret,a = cap.read()
+
+    a=cv2.imread("lafoto.JPG", 0)
+    a=np.flipud(a)
+    a=np.fliplr(a)
+    dlist=extractdigits(a)
     # sols=np.array([2,1,0,7,5,4,3,9,8,6])
     # sumpmtrain(dlist, sols, "tdictsum.pkl")
-    while True:
-    #a=cv2.imread("data/camtest8.png", 0)
-    #print a.shape
-        ret,a = cap.read()
-        a = cv2.cvtColor(a,cv2.COLOR_BGR2GRAY)
 
-        a=a[:800,1000:1450]
+    # while True:
+    # #a=cv2.imread("data/camtest8.png", 0)
+    # #print a.shape
+    #     ret,a = cap.read()
+    #     a = cv2.cvtColor(a,cv2.COLOR_BGR2GRAY)
 
-        dlist=extractdigits(a)
-        #sumpmtrain2(dlist, "tdictsumnew.pkl")
-        #sumpmtest2("tdictsumnew.pkl", dlist)
-        sumpmtestlive("tdictsumnew.pkl", dlist)
+    #     a=a[:800,1000:1450]
+
+    #     dlist=extractdigits(a)
+    #     #sumpmtrain2(dlist, "tdictsumnew.pkl")
+    #     #sumpmtest2("tdictsumnew.pkl", dlist)
+    #     sumpmtestlive("tdictsumnew.pkl", dlist)
         #if cv2.waitKey(2000) == 27:
             #break
     #plotsumpkl("tdictsum.pkl")
