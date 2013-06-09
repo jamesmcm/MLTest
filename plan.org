@@ -19,15 +19,18 @@
 ** Each digit is identified successfully, this should be trivial
 
 * Plan:
+* TODO Better way of getting full training set - perhaps via frames?
+* TODO Wire up monitor config
+* TODO Fix segfaulting on any imshow() - need this for test/training sets
 * TODO Find some way of solving merged number problem
 * TODO Use running average of frames to determine likely correct digits and known number of digits
 * DONE Add using line conoturs to remove bg that is in rectangle of digit
 * DONE Use starting position of contour to eliminate side noise contours
 * TODO Sort out functions
-* TODO Look up how to do live capture
-* TODO Sort out threshold
-* TODO Find position for camera
-* TODO To get out of bubble writing - take contours, then not the contours and then split the digits
+* DONE Look up how to do live capture
+* DONE Sort out threshold
+* DONE Find position for camera
+* DONE To get out of bubble writing - take contours, then not the contours and then split the digits
 * TODO Clearly separate training from image set, from live testing functions
 * DONE Write method which sums up pixel appearance in training set, then sums scores over this for test set
 ** Can plot classifier as grey-scale image somehow

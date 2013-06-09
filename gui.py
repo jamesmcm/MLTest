@@ -21,6 +21,14 @@ import gtk
 import cv2
 from scipy.misc import imresize
 
+#Misc functions
+def CV_FOURCC(c1, c2, c3, c4) :
+    return (c1 & 255) + ((c2 & 255) << 8) + ((c3 & 255) << 16) + ((c4 & 255) << 24)
+
+def reversetuple((a,b)):
+    return (b,a)
+
+
 #Start class:
 class gui:
     """Main application class."""
@@ -48,6 +56,14 @@ class gui:
         self.axis=self.figure.add_subplot(111)
         self.cap = cv2.VideoCapture(self.devicenumcb.get_active())
 
+        #Monitor config window
+        self.tolerance=25
+        self.blocksize=7
+        self.d1size=(80,50)
+        self.builder.get_object("tolerance").set_text("25")
+        self.builder.get_object("blocksize").set_text("7")
+        self.builder.get_object("d1x").set_text("50")
+        self.builder.get_object("d1y").set_text("80")
 
     #General functions
     def btnclicked(self, widget):
@@ -55,7 +71,13 @@ class gui:
         if call=="resbtn":
             self.setResolution()
         elif call=="imagesavebtn":
-            self.saveImage()
+            fname=self.builder.get_object("imagesavetext").get_text()
+            if fname!="" and fname!=None:
+                self.saveImage()
+        elif call=="videosavebtn":
+            fname=self.builder.get_object("videosavefile").get_text()
+            if fname!="" and fname!=None:
+                self.saveVideo(fname)
 
     def openWindow(self, widget):
 
@@ -65,6 +87,8 @@ class gui:
             self.openCameraConfig()
         elif call=="openimagesave": 
             self.builder.get_object("imagesavewindow").set_visible(1)
+        elif call=="openrecordvideo": 
+            self.builder.get_object("videosavewindow").set_visible(1)
 
     def closeWindow(self,widget):
         call=gtk.Buildable.get_name(widget)
@@ -72,6 +96,9 @@ class gui:
             self.applyCameraConfig()
         elif call=="imagesaveclosebtn":
             self.builder.get_object("imagesavewindow").set_visible(0)
+        elif call=="closevideowindow":
+            self.builder.get_object("videosavewindow").set_visible(0)
+
 
     #Camera config functions
     def openCameraConfig(self):
@@ -82,10 +109,12 @@ class gui:
         ret,img = self.cap.read() 
         try:
             img = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+            #cv2.imshow("newtest",img)
         except:
             img=np.zeros((100,100))
         self.builder.get_object("resx").set_text(str(img.shape[1]))
         self.builder.get_object("resy").set_text(str(img.shape[0]))
+        self.resolution=(img.shape[1], img.shape[0])
 
         if img.shape[1]<self.screensize[0] and img.shape[0]<self.screensize[1]:
             pass
@@ -111,16 +140,40 @@ class gui:
         y=self.builder.get_object("resy").get_text()
         self.cap.set(3,int(x))
         self.cap.set(4,int(y))
+        self.resolution=(int(x),int(y))
         self.openCameraConfig()
 
-
-    def saveImage(self):
-        fname=self.builder.get_object("imagesavetext").get_text()
+    #Image saving
+    def saveImage(self,fname):
         if fname!="" or None:
             ret,im=self.cap.read()
             cv2.imwrite(fname,im)
 
+    #Video saving
+    def saveVideo(self,fname):
+        try:
+            if fname.lower()[-4:]!=".avi":
+                fname=fname+".avi"
+        except:
+            fname=fname+".avi"
+        video  = cv2.VideoWriter(fname,CV_FOURCC(ord("D"),ord("I"),ord("V"),ord("X")), 25, self.resolution)
+        ret,im = self.cap.read() 
+        for i in range(75):
+            #solve threading problem here
+            #Segfaults on opening imshow?
+            # get grayscale image
+            ret,im = self.cap.read() 
+            #im = cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
+            video.write(im)
+            #cv2.imshow("webcam",im)
+            #if (cv2.waitKey(5) != -1):
+            #    video.release()
+            #    break
+        video.release()
+        #TODO: May want to chuck away last frame - perhaps do this in analysis
 
+
+            
 #Main loop:
 if __name__ == "__main__":
 	mygui = gui()
