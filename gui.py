@@ -3,6 +3,7 @@
 import os
 import matplotlib
 matplotlib.use('GTK')
+from matplotlib.backends.backend_gtkagg import NavigationToolbar2GTKAgg as NavigationToolbar
 from matplotlib.backends.backend_gtkagg import FigureCanvasGTKAgg  
 import matplotlib.cm as cm
 import numpy as np
@@ -38,7 +39,7 @@ class gui:
         myscreen=gtk.gdk.Screen()
         self.screensize=(myscreen.get_width(),myscreen.get_height())
         print self.screensize
-        dic={"mainwindowdestroy" : gtk.main_quit,"openwindow":self.openWindow, "closewindow":self.closeWindow, "devicenumchanged":self.changeDeviceNumber, "btnclicked":self.btnclicked}
+        dic={"mainwindowdestroy" : gtk.main_quit,"openwindow":self.openWindow, "closewindow":self.closeWindow, "devicenumchanged":self.changeDeviceNumber, "btnclicked":self.btnclicked, "fileset":self.fileSet, "mctoolbarbtn":self.mctoolbarClicked}
         self.builder.connect_signals(dic)
 
         #Initialise defaults
@@ -52,20 +53,34 @@ class gui:
         self.devicenumcb.append_text('1')
         self.devicenumcb.set_active(0)
         self.devicenumcb.connect("changed", self.changeDeviceNumber)
-        self.figure=Figure()
-        self.axis=self.figure.add_subplot(111)
-        self.cap = cv2.VideoCapture(self.devicenumcb.get_active())
+        self.figurecc=Figure()
+        self.axiscc=self.figurecc.add_subplot(111)
+        try:
+            self.cap = cv2.VideoCapture(self.devicenumcb.get_active())
+        except:
+            pass
 
         #Monitor config window
         self.tolerance=25
         self.blocksize=7
         self.d1size=(80,50)
+        self.d2size=None
         self.builder.get_object("tolerance").set_text("25")
         self.builder.get_object("blocksize").set_text("7")
         self.builder.get_object("d1x").set_text("50")
         self.builder.get_object("d1y").set_text("80")
+        self.figuremc=Figure()
+        self.axismc=self.figuremc.add_subplot(111)
+        self.mcflipx=False
+        self.mcflipy=False
 
     #General functions
+    def fileSet(self, widget):
+        call=gtk.Buildable.get_name(widget)
+        if call=="monitorconfigloadfile":
+            self.loadMonitorImage(widget.get_filename())
+
+
     def btnclicked(self, widget):
         call=gtk.Buildable.get_name(widget)
         if call=="resbtn":
@@ -78,6 +93,34 @@ class gui:
             fname=self.builder.get_object("videosavefile").get_text()
             if fname!="" and fname!=None:
                 self.saveVideo(fname)
+        elif call=="setparameters":
+            self.setParameters()
+        elif call=="setdigits":
+            self.setDigitSizes()
+        elif call=="mcflipx":
+            if self.mcflipx==False:
+                self.mcflipx=True
+            else:
+                self.mcflipx=False
+            #redraw
+        elif call=="mcflipy":
+            if self.mcflipy==False:
+                self.mcflipy=True
+            else:
+                self.mcflipy=False
+
+        elif call=="addtag":
+            pass
+        elif call=="cleartags":
+            pass
+        elif call=="addcontour":
+            pass
+        elif call=="rmcontour":
+            pass
+        elif call=="splitcontour":
+            pass
+
+
 
     def openWindow(self, widget):
 
@@ -89,6 +132,11 @@ class gui:
             self.builder.get_object("imagesavewindow").set_visible(1)
         elif call=="openrecordvideo": 
             self.builder.get_object("videosavewindow").set_visible(1)
+        elif call=="openmonitorconfig": 
+            self.builder.get_object("monitorconfig").set_visible(1)
+        elif call=="opentrainingdatawindow": 
+            pass
+
 
     def closeWindow(self,widget):
         call=gtk.Buildable.get_name(widget)
@@ -98,12 +146,14 @@ class gui:
             self.builder.get_object("imagesavewindow").set_visible(0)
         elif call=="closevideowindow":
             self.builder.get_object("videosavewindow").set_visible(0)
+        elif call=="closemonitorconfig":
+            self.builder.get_object("monitorconfig").set_visible(0)
 
 
     #Camera config functions
     def openCameraConfig(self):
         try:
-            self.builder.get_object("ccimgbox").remove(self.canvas)
+            self.builder.get_object("ccimgbox").remove(self.canvascc)
         except:
             pass
         ret,img = self.cap.read() 
@@ -122,11 +172,11 @@ class gui:
             img=imresize(img, (img.shape[0]/2, img.shape[1]/2))
             
 
-        self.axis.imshow(img, cmap=cm.gray)
-        self.canvas=FigureCanvasGTKAgg(self.figure)
-        self.canvas.draw()
-        self.canvas.show()
-        self.builder.get_object("ccimgbox").pack_start(self.canvas, True, True)
+        self.axiscc.imshow(img, cmap=cm.gray) #set scale to 0,255 somehow
+        self.canvascc=FigureCanvasGTKAgg(self.figurecc)
+        self.canvascc.draw()
+        self.canvascc.show()
+        self.builder.get_object("ccimgbox").pack_start(self.canvascc, True, True)
 
         self.builder.get_object("cameraconfig").set_visible(1)
     def applyCameraConfig(self):
@@ -159,20 +209,203 @@ class gui:
         video  = cv2.VideoWriter(fname,CV_FOURCC(ord("D"),ord("I"),ord("V"),ord("X")), 25, self.resolution)
         ret,im = self.cap.read() 
         for i in range(75):
-            #solve threading problem here
-            #Segfaults on opening imshow?
-            # get grayscale image
             ret,im = self.cap.read() 
-            #im = cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
             video.write(im)
-            #cv2.imshow("webcam",im)
-            #if (cv2.waitKey(5) != -1):
-            #    video.release()
-            #    break
         video.release()
         #TODO: May want to chuck away last frame - perhaps do this in analysis
 
+    #Monitor configuration
+    def loadMonitorImage(self,fname):
+        if fname[-4:].lower()==".avi":
+            #get first frame - look this up
+            pass
+        elif fname[-4:].lower()==".png" or fname[-4:].lower()==".jpg":
+            a=cv2.imread(fname, 0) #note 0 implies grayscale
+            #getcontours
+            (b,dlist)=self.getContours(a,self.d1size)
+            #draw image re-sized with contours projected
+            self.drawMonitor(b)
+            pass
+        else:
+            #Error
+            pass
 
+    def setParameters(self):
+        self.tolerance=self.builder.get_object("tolerance").get_text()
+        self.blocksize=self.builder.get_object("blocksize").get_text()
+        #redraw monitorconfig window
+
+    def setDigitSizes(self):
+        if (self.builder.get_object("d1y").get_text()!=None and self.builder.get_object("d1y").get_text()!="") and (self.builder.get_object("d1x").get_text()!="" and self.builder.get_object("d1x").get_text()!=None):
+            self.d1size=(int(self.builder.get_object("d1y").get_text()),int(self.builder.get_object("d1x").get_text()))
+        else:
+            self.d1size=None
+
+        if (self.builder.get_object("d2y").get_text()!=None and self.builder.get_object("d2y").get_text()!="") and (self.builder.get_object("d2x").get_text()!="" and self.builder.get_object("d2x").get_text()!=None):
+            self.d2size=(int(self.builder.get_object("d2y").get_text()),int(self.builder.get_object("d2x").get_text()))
+        else:
+            self.d2size=None
+            
+        #Redo contours, etc.
+
+
+    def getContours(self,a,dsize):
+        a=cv2.GaussianBlur(a,(3,3), 0)
+        orig=a.copy()
+        a=cv2.adaptiveThreshold(a, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, self.tolerance, self.blocksize)
+        b=a.copy()
+
+        contours, hierarchy = cv2.findContours(a, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_TC89_KCOS)
+        mask = np.zeros(a.shape, dtype=np.uint8)
+        dlist=[]
+        output=np.zeros(b.shape,dtype=np.uint8)
+
+        for cont in contours:
+
+            br=cv2.boundingRect(cont)
+            charray=np.zeros(dsize, dtype=np.uint8)
+            temp=b[br[1]:br[1]+br[3], br[0]:br[0]+br[2]]
+
+            if temp.shape[0]>30 and temp.shape[1]>30:
+                temp=cv2.bitwise_not(temp)
+                temp2=temp.copy()
+                contours2, hierarchy = cv2.findContours(temp2, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
+                for cont2 in contours2:
+                    br2=cv2.boundingRect(cont2)
+
+                    if br2[3]<dsize[0]+10 and br2[3]>dsize[0]-10 and br2[2]<dsize[1]+10 and br2[2]>dsize[1]-50 and br2[0]>0+(temp.shape[1]/30) and br2[0]<temp.shape[1]-(temp.shape[1]/5):
+                        mask = np.zeros(temp2.shape, dtype=np.uint8)
+                        cv2.drawContours(mask,[cont2],0,255,-1)
+
+                        temp2=temp.copy()
+                        temp2[mask==0]=0
+
+                        temp3=temp2[br2[1]:br2[1]+br2[3], br2[0]:br2[0]+br2[2]]
+                        charray=temp3.copy()
+                        charray=imresize(charray, dsize)
+                        dlist.append((charray, br[0]+br2[0], br[1]))
+
+                        if br2[2]>10 and br2[3]>10:
+                            cv2.rectangle(b, (br[0]+br2[0],br[1]+br2[1]), (br[0]+br2[0]+br2[2],br[1]+br2[1]+br2[3]), 100)
+
+
+        return (b,dlist)
+
+    def drawMonitor(self,b):
+        try:
+            self.builder.get_object("monitorconfigspace").remove(self.canvasmc)
+            #self.builder.get_object("mctoolbar").remove(self.mctoolbar)	
+        except:
+            pass
+
+
+        if self.flipx==True:
+            b=np.fliplr(b)
+        if self.flipx==True:
+            b=np.flipud(b)
+
+        #Add cropping
+        self.axismc.imshow(b, cmap=cm.gray) #set scale to 0,255 somehow
+
+        #Maybe this needn't be redefined for every draw - only need draw() but not drawn often anyway
+        self.canvasmc=FigureCanvasGTKAgg(self.figuremc)
+
+        self.canvasmc.draw()
+        self.canvasmc.show()
+        self.canvasmc.mpl_connect('motion_notify_event', self.mcHoverOnImage)
+        self.canvasmc.mpl_connect('button_release_event', self.mcCaptureClick)
+
+        self.builder.get_object("monitorconfigspace").pack_start(self.canvasmc, True, True)
+        
+
+    def mcHoverOnImage(self, event):
+        if event.x!=None and event.y!=None and event.xdata!=None and event.ydata!=None:
+            pass
+        
+    def mcCaptureClick(self, event):
+        if self.clickstate=="none":
+            pass
+        elif event.x==None or event.y==None or event.xdata==None or event.ydata==None:
+            pass
+
+    def mctoolbarClicked(self,widget):
+        call=gtk.Buildable.get_name(widget)
+        if call=="mczoomin":
+            self.mcZoomIn()
+        elif call=="mczoomout":
+            self.mcZoomOut()
+        elif call=="mcpanleft":
+            self.mcPanLeft()
+        elif call=="mcpanright":
+            self.mcPanRight()
+        elif call=="mcpanup":
+            self.mcPanUp()
+        elif call=="mcpandown":
+            self.mcPanDown()
+        elif call=="mcresetzoom":
+            self.mcResetZoom()
+
+
+    def mcZoomIn(self):
+        xlims=self.axismc.get_xlim()
+        ylims=self.axismc.get_ylim()
+        xchange=abs(xlims[1]-xlims[0])*0.1
+        ychange=abs(ylims[1]-ylims[0])*0.1
+        self.axismc.set_xlim(left=xlims[0]+xchange, right=xlims[1]-xchange)
+        self.axismc.set_ylim(top=ylims[1]+ychange, bottom=ylims[0]-ychange)
+        self.builder.get_object("monitorconfigspace").remove(self.canvasmc)
+        self.builder.get_object("monitorconfigspace").pack_start(self.canvasmc, True, True)
+        
+    def mcZoomOut(self):
+        xlims=self.axismc.get_xlim()
+        ylims=self.axismc.get_ylim()
+        xchange=abs(xlims[1]-xlims[0])*0.111
+        ychange=abs(ylims[1]-ylims[0])*0.111
+        self.axismc.set_xlim(left=xlims[0]-xchange, right=xlims[1]+xchange)
+        self.axismc.set_ylim(top=ylims[1]-ychange, bottom=ylims[0]+ychange)
+        self.builder.get_object("monitorconfigspace").remove(self.canvasmc)
+        self.builder.get_object("monitorconfigspace").pack_start(self.canvasmc, True, True)
+
+    def mcPanLeft(self):
+        xlims=self.axismc.get_xlim()
+        xchange=abs(xlims[1]-xlims[0])*0.1
+        self.axismc.set_xlim(left=xlims[0]-xchange, right=xlims[1]-xchange)
+        self.builder.get_object("monitorconfigspace").remove(self.canvasmc)
+        self.builder.get_object("monitorconfigspace").pack_start(self.canvasmc, True, True)
+
+    def mcPanRight(self):
+        xlims=self.axismc.get_xlim()
+        xchange=abs(xlims[1]-xlims[0])*0.1
+        self.axismc.set_xlim(left=xlims[0]+xchange, right=xlims[1]+xchange)
+        self.builder.get_object("monitorconfigspace").remove(self.canvasmc)
+        self.builder.get_object("monitorconfigspace").pack_start(self.canvasmc, True, True)
+
+    def mcPanDown(self):
+        ylims=self.axismc.get_ylim()
+        ychange=abs(ylims[1]-ylims[0])*0.1
+        self.axismc.set_ylim(top=ylims[1]+ychange, bottom=ylims[0]+ychange)
+        self.builder.get_object("monitorconfigspace").remove(self.canvasmc)
+        self.builder.get_object("monitorconfigspace").pack_start(self.canvasmc, True, True)
+	    
+    def mcPanUp(self):
+        ylims=self.axismc.get_ylim()
+        ychange=abs(ylims[1]-ylims[0])*0.1
+        self.axismc.set_ylim(top=ylims[1]-ychange, bottom=ylims[0]-ychange)
+        self.builder.get_object("monitorconfigspace").remove(self.canvasmc)
+        self.builder.get_object("monitorconfigspace").pack_start(self.canvasmc, True, True)
+
+    def mcResetZoom(self):
+        #Reset view to original somehow - fit entire image
+        pass
+
+    def setClickMode(self,mode):
+        #crop, tag, addcontour, rmcontour, splitcontour
+        self.builder.get_object("mcclickmode").set_label("Mode:" + str(mode))
+        self.clickmode=mode
+
+    def drawContours(self,contours):
+        #draw rectangles
+        pass
             
 #Main loop:
 if __name__ == "__main__":

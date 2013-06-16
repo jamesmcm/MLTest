@@ -19,8 +19,27 @@
 ** Each digit is identified successfully, this should be trivial
 
 * Plan:
+* TODO perhaps highlight selected contour
+* TODO Add code for additional digit passes
+* TODO Crop image by clicking two points
+* TODO Finish setting parameter redraws
+* TODO Add click modes
+* TODO Make hitting escape clear click mode
+* TODO Make tag popup
+* TODO Add contour by clicking two points
+* TODO Remove contour by clicking with in
+* TODO Split contour by clicking at split point
+* TODO Add code for automatically splitting merged digits
+* TODO Add ability to crop image and store that
+* TODO Split in to separate files
+* TODO Draw contours directly in colour using numpy
+* TODO Intelligently set window sizes - allow resize?
+* TODO Don't resize but use zoom with toolbar
+* TODO Bypass segfaulting using numpy imshow and keypress as in tesiapp
 * TODO Better way of getting full training set - perhaps via frames?
 * TODO Wire up monitor config
+* TODO Change scale on colourbars to fit
+* TODO Include variation of more parameters
 * TODO Fix segfaulting on any imshow() - need this for test/training sets
 * TODO Find some way of solving merged number problem
 * TODO Use running average of frames to determine likely correct digits and known number of digits
