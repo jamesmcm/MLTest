@@ -10,7 +10,7 @@ import numpy as np
 import matplotlib.image as mpimg
 from matplotlib.figure import Figure
 from matplotlib import lines
-from matplotlib.patches import Circle
+from matplotlib.patches import Rectangle
 import matplotlib.pyplot as plt
 import sys
 import math
@@ -73,6 +73,9 @@ class gui:
         self.axismc=self.figuremc.add_subplot(111)
         self.mcflipx=False
         self.mcflipy=False
+        self.clickstate="none"
+        self.crop1=None
+        self.crop2=None
 
     #General functions
     def fileSet(self, widget):
@@ -102,23 +105,26 @@ class gui:
                 self.mcflipx=True
             else:
                 self.mcflipx=False
-            #redraw
+            self.loadMonitorImage(self.builder.get_object("monitorconfigloadfile").get_filename())
         elif call=="mcflipy":
             if self.mcflipy==False:
                 self.mcflipy=True
             else:
                 self.mcflipy=False
-
+            self.loadMonitorImage(self.builder.get_object("monitorconfigloadfile").get_filename())
         elif call=="addtag":
-            pass
+            self.setClickMode("tag1")
         elif call=="cleartags":
+            #TODO Clear tags
             pass
         elif call=="addcontour":
-            pass
+            self.setClickMode("addcontour1")
         elif call=="rmcontour":
-            pass
+            self.setClickMode("rmcontour")
         elif call=="splitcontour":
-            pass
+            self.setClickMode("splitcontour")
+        elif call=="cropimage":
+            self.setClickMode("crop1")
 
 
 
@@ -222,18 +228,27 @@ class gui:
         elif fname[-4:].lower()==".png" or fname[-4:].lower()==".jpg":
             a=cv2.imread(fname, 0) #note 0 implies grayscale
             #getcontours
-            (b,dlist)=self.getContours(a,self.d1size)
-            #draw image re-sized with contours projected
-            self.drawMonitor(b)
-            pass
         else:
             #Error
             pass
+        if self.mcflipx==True and self.mcflipy==True:
+            a=cv2.flip(a,-1)
+        elif self.mcflipx==True and self.mcflipy==False:
+            a=cv2.flip(a,0)
+        if self.mcflipy==True and self.mcflipx==False:
+            a=cv2.flip(a,1)
+        if self.crop1!=None and self.crop2!=None:
+            #print str(self.crop1)
+            #print str(self.crop2)
+            a=a[np.min([self.crop1[1],self.crop2[1]]):np.max([self.crop1[1],self.crop2[1]]),np.min([self.crop1[0],self.crop2[0]]):np.max([self.crop1[0],self.crop2[0]])] 
+        (self.monimage,dlist,self.rlist)=self.getContours(a,self.d1size)
+            #TODO add other digit sizes
+        self.drawMonitor()
 
     def setParameters(self):
-        self.tolerance=self.builder.get_object("tolerance").get_text()
-        self.blocksize=self.builder.get_object("blocksize").get_text()
-        #redraw monitorconfig window
+        self.tolerance=int(self.builder.get_object("tolerance").get_text())
+        self.blocksize=int(self.builder.get_object("blocksize").get_text())
+        self.loadMonitorImage(self.builder.get_object("monitorconfigloadfile").get_filename())
 
     def setDigitSizes(self):
         if (self.builder.get_object("d1y").get_text()!=None and self.builder.get_object("d1y").get_text()!="") and (self.builder.get_object("d1x").get_text()!="" and self.builder.get_object("d1x").get_text()!=None):
@@ -247,19 +262,18 @@ class gui:
             self.d2size=None
             
         #Redo contours, etc.
-
+        self.loadMonitorImage(self.builder.get_object("monitorconfigloadfile").get_filename())
 
     def getContours(self,a,dsize):
         a=cv2.GaussianBlur(a,(3,3), 0)
         orig=a.copy()
         a=cv2.adaptiveThreshold(a, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, self.tolerance, self.blocksize)
         b=a.copy()
-
         contours, hierarchy = cv2.findContours(a, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_TC89_KCOS)
         mask = np.zeros(a.shape, dtype=np.uint8)
         dlist=[]
         output=np.zeros(b.shape,dtype=np.uint8)
-
+        rlist=[]
         for cont in contours:
 
             br=cv2.boundingRect(cont)
@@ -286,26 +300,22 @@ class gui:
                         dlist.append((charray, br[0]+br2[0], br[1]))
 
                         if br2[2]>10 and br2[3]>10:
-                            cv2.rectangle(b, (br[0]+br2[0],br[1]+br2[1]), (br[0]+br2[0]+br2[2],br[1]+br2[1]+br2[3]), 100)
+                            #cv2.rectangle(b, (br[0]+br2[0],br[1]+br2[1]), (br[0]+br2[0]+br2[2],br[1]+br2[1]+br2[3]), 100)
+                            rlist.append(((br[0]+br2[0], br[1]+br2[1]), br2[2], br2[3]))
 
 
-        return (b,dlist)
+        return (b,dlist,rlist)
 
-    def drawMonitor(self,b):
+    def drawMonitor(self):
         try:
             self.builder.get_object("monitorconfigspace").remove(self.canvasmc)
+            self.axismc.clear()
             #self.builder.get_object("mctoolbar").remove(self.mctoolbar)	
         except:
             pass
 
-
-        if self.flipx==True:
-            b=np.fliplr(b)
-        if self.flipx==True:
-            b=np.flipud(b)
-
         #Add cropping
-        self.axismc.imshow(b, cmap=cm.gray) #set scale to 0,255 somehow
+        self.axismc.imshow(self.monimage, cmap=cm.gray) #set scale to 0,255 somehow
 
         #Maybe this needn't be redefined for every draw - only need draw() but not drawn often anyway
         self.canvasmc=FigureCanvasGTKAgg(self.figuremc)
@@ -316,6 +326,9 @@ class gui:
         self.canvasmc.mpl_connect('button_release_event', self.mcCaptureClick)
 
         self.builder.get_object("monitorconfigspace").pack_start(self.canvasmc, True, True)
+        for item in self.rlist:
+            r=Rectangle(item[0], item[1], item[2], fill=False, color="red")
+            self.axismc.add_patch(r)
         
 
     def mcHoverOnImage(self, event):
@@ -323,10 +336,20 @@ class gui:
             pass
         
     def mcCaptureClick(self, event):
+        #print "click"
         if self.clickstate=="none":
             pass
-        elif event.x==None or event.y==None or event.xdata==None or event.ydata==None:
-            pass
+        #elif not(event.x==None or event.y==None or event.xdata==None or event.ydata==None):
+        else:
+            if self.clickstate=="crop1":
+                self.crop1=(int(round(event.xdata)), int(round(event.ydata)))
+                self.setClickMode("crop2")
+            elif self.clickstate=="crop2":
+                self.crop2=(int(round(event.xdata)), int(round(event.ydata)))
+                self.setClickMode("none")
+                self.loadMonitorImage(self.builder.get_object("monitorconfigloadfile").get_filename())
+                #TODO redraw
+                
 
     def mctoolbarClicked(self,widget):
         call=gtk.Buildable.get_name(widget)
@@ -399,14 +422,10 @@ class gui:
         pass
 
     def setClickMode(self,mode):
-        #crop, tag, addcontour, rmcontour, splitcontour
+        #crop1, crop2, tag1, tag2, addcontour1, addcontour2, rmcontour, splitcontour
         self.builder.get_object("mcclickmode").set_label("Mode:" + str(mode))
-        self.clickmode=mode
+        self.clickstate=mode
 
-    def drawContours(self,contours):
-        #draw rectangles
-        pass
-            
 #Main loop:
 if __name__ == "__main__":
 	mygui = gui()

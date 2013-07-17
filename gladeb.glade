@@ -1033,12 +1033,92 @@ Configuration</property>
       </object>
     </child>
   </object>
+  <object class="GtkWindow" id="tagwindow">
+    <property name="can_focus">False</property>
+    <property name="modal">True</property>
+    <property name="deletable">False</property>
+    <child>
+      <object class="GtkVBox" id="tvbox1">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <child>
+          <object class="GtkLabel" id="tlabel1">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">Enter tag name:</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkEntry" id="tagname">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="invisible_char">•</property>
+            <property name="primary_icon_activatable">False</property>
+            <property name="secondary_icon_activatable">False</property>
+            <property name="primary_icon_sensitive">True</property>
+            <property name="secondary_icon_sensitive">True</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkHBox" id="thbox1">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <child>
+              <object class="GtkButton" id="tagcancelbtn">
+                <property name="label">gtk-cancel</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_action_appearance">False</property>
+                <property name="use_stock">True</property>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="tagokbtn">
+                <property name="label">gtk-ok</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_action_appearance">False</property>
+                <property name="use_stock">True</property>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </object>
   <object class="GtkWindow" id="trainingdatawindow">
     <property name="width_request">800</property>
     <property name="height_request">600</property>
     <property name="can_focus">False</property>
     <child>
-      <object class="GtkVBox" id="vbox1">
+      <object class="GtkVBox" id="bvbox1">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <child>
@@ -1054,11 +1134,11 @@ Configuration</property>
           </packing>
         </child>
         <child>
-          <object class="GtkVBox" id="vbox2">
+          <object class="GtkVBox" id="vbbox2">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <child>
-              <object class="GtkVBox" id="vbox3">
+              <object class="GtkVBox" id="bvbox3">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <child>
@@ -1075,7 +1155,7 @@ Configuration</property>
               </packing>
             </child>
             <child>
-              <object class="GtkToolbar" id="toolbar1">
+              <object class="GtkToolbar" id="btoolbar1">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <child>
@@ -1157,7 +1237,7 @@ Configuration</property>
           </packing>
         </child>
         <child>
-          <object class="GtkHBox" id="hbox1">
+          <object class="GtkHBox" id="bhbox1">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <child>

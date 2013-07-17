@@ -19,6 +19,11 @@
 ** Each digit is identified successfully, this should be trivial
 
 * Plan:
+* TODO Add click mode stuff
+* TODO Add opening videos
+* Draw rectangles: class matplotlib.patches.Rectangle((x,y), width, height, fill=False)
+* gca().add_patch(Rectangle((1,1),1,1))
+* Load video: cap = cv2.VideoCapture("out1.avi")   cap.read()
 * TODO perhaps highlight selected contour
 * TODO Add code for additional digit passes
 * TODO Crop image by clicking two points
