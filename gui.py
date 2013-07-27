@@ -29,6 +29,12 @@ def CV_FOURCC(c1, c2, c3, c4) :
 def reversetuple((a,b)):
     return (b,a)
 
+class Contour(object):
+    def __init__(self, ritem, label):
+        #Set label, position, etc.
+        self.ritem=ritem
+        self.label=label
+        
 
 #Start class:
 class gui:
@@ -77,12 +83,19 @@ class gui:
         self.crop1=None
         self.crop2=None
 
+        self.contours=[]
+        self.dlist=[]
+        self.figuretr=Figure()
+        self.axistr=self.figuretr.add_subplot(111)
+        self.trframe=0
+
     #General functions
     def fileSet(self, widget):
         call=gtk.Buildable.get_name(widget)
         if call=="monitorconfigloadfile":
             self.loadMonitorImage(widget.get_filename())
-
+        elif call=="trainingfilechooser":
+            self.loadTrainingImage(widget.get_filename())
 
     def btnclicked(self, widget):
         call=gtk.Buildable.get_name(widget)
@@ -113,7 +126,7 @@ class gui:
                 self.mcflipy=False
             self.loadMonitorImage(self.builder.get_object("monitorconfigloadfile").get_filename())
         elif call=="addtag":
-            self.setClickMode("tag1")
+            self.setClickMode("tag")
         elif call=="cleartags":
             #TODO Clear tags
             pass
@@ -125,8 +138,18 @@ class gui:
             self.setClickMode("splitcontour")
         elif call=="cropimage":
             self.setClickMode("crop1")
+        elif call=="tagokbtn":
+            self.curtag=self.builder.get_object("tagname").get_text()   
+            self.builder.get_object("tagwindow").set_visible(0)   
+            self.contours.append(Contour(self.tempitem,self.curtag))
+        elif call=="tagcancelbtn":
+            self.setClickMode("none")
+            self.builder.get_object("tagwindow").set_visible(0)
+        elif call=="trnext":
+            pass
 
-
+        elif call=="trprev":
+            pass
 
     def openWindow(self, widget):
 
@@ -141,7 +164,7 @@ class gui:
         elif call=="openmonitorconfig": 
             self.builder.get_object("monitorconfig").set_visible(1)
         elif call=="opentrainingdatawindow": 
-            pass
+            self.builder.get_object("trainingdatawindow").set_visible(1)
 
 
     def closeWindow(self,widget):
@@ -327,7 +350,10 @@ class gui:
 
         self.builder.get_object("monitorconfigspace").pack_start(self.canvasmc, True, True)
         for item in self.rlist:
+            #Structure of rlist:
+            #rlist.append(((br[0]+br2[0], br[1]+br2[1]), br2[2], br2[3]))
             r=Rectangle(item[0], item[1], item[2], fill=False, color="red")
+            #Rectangle has (lowerleft, width, height)
             self.axismc.add_patch(r)
         
 
@@ -347,9 +373,23 @@ class gui:
             elif self.clickstate=="crop2":
                 self.crop2=(int(round(event.xdata)), int(round(event.ydata)))
                 self.setClickMode("none")
-                self.loadMonitorImage(self.builder.get_object("monitorconfigloadfile").get_filename())
-                #TODO redraw
-                
+                self.loadMonitorImage(self.builder.get_object("monitorconfigloadfile").get_filename())    
+            elif self.clickstate=="tag":
+                #Check if we are inside contour, if so present label window, if not, ignore
+                #Contours checked by rlist?
+                coords=(int(round(event.xdata)), int(round(event.ydata)))
+                found=False
+                for item in self.rlist:
+                    if (coords[0] >= item[0][0]) and (coords[0] <= (item[0][0]+item[1])) and (coords[1] >= item[0][1]) and (coords[1] <= item[0][1]+item[2]):
+                        #Found contour, create contour object for final contour list
+                        found=True
+                        break
+                if found==True:
+
+                    self.tempitem=item
+                    self.builder.get_object("tagwindow").set_visible(1)
+                        #self.contours.append(Contour(item,self.curtag))
+                        
 
     def mctoolbarClicked(self,widget):
         call=gtk.Buildable.get_name(widget)
@@ -422,9 +462,57 @@ class gui:
         pass
 
     def setClickMode(self,mode):
-        #crop1, crop2, tag1, tag2, addcontour1, addcontour2, rmcontour, splitcontour
+        #none, crop1, crop2, tag, addcontour1, addcontour2, rmcontour, splitcontour
         self.builder.get_object("mcclickmode").set_label("Mode:" + str(mode))
         self.clickstate=mode
+
+    def loadTrainingImage(self,fname):
+        if fname[-4:].lower()==".avi":
+            #get first frame - look this up
+            pass
+        elif fname[-4:].lower()==".png" or fname[-4:].lower()==".jpg":
+            a=cv2.imread(fname, 0) #note 0 implies grayscale
+            #getcontours
+        else:
+            #Error
+            pass
+        if self.mcflipx==True and self.mcflipy==True:
+            a=cv2.flip(a,-1)
+        elif self.mcflipx==True and self.mcflipy==False:
+            a=cv2.flip(a,0)
+        if self.mcflipy==True and self.mcflipx==False:
+            a=cv2.flip(a,1)
+        if self.crop1!=None and self.crop2!=None:
+            #print str(self.crop1)
+            #print str(self.crop2)
+            a=a[np.min([self.crop1[1],self.crop2[1]]):np.max([self.crop1[1],self.crop2[1]]),np.min([self.crop1[0],self.crop2[0]]):np.max([self.crop1[0],self.crop2[0]])] 
+        (self.monimage,dlist,self.rlist)=self.getContours(a,self.d1size)
+
+        for cont in self.contours:
+            #add individual digits to list, then tag list
+            self.dlist.append(self.monimage[cont.ritem[0][1]:cont.ritem[0][1]+cont.ritem[2],cont.ritem[0][0]:cont.ritem[0][0]+cont.ritem[1]])
+
+        #update display
+        self.updateTrainingDataWindow()
+
+    def updateTrainingDataWindow(self):
+        #Use curframe number, like TesiDogs program
+        try:
+            self.builder.get_object("bvbox3").remove(self.canvastr)
+            self.axistr.clear()
+        except:
+            pass
+
+        self.axistr.imshow(self.dlist[self.trframe], cmap=cm.gray) #set scale to 0,255 somehow
+        self.canvastr=FigureCanvasGTKAgg(self.figuretr)
+        self.canvastr.draw()
+        self.canvastr.show()
+        self.builder.get_object("monitorconfigspace").pack_start(self.canvastr, True, True)
+        #TODO fix this
+
+        #bvbox3
+        #trframecount
+        #trcursol
 
 #Main loop:
 if __name__ == "__main__":

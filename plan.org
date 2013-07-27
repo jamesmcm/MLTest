@@ -19,6 +19,9 @@
 ** Each digit is identified successfully, this should be trivial
 
 * Plan:
+* TODO Add tags for each contour - make more visible later
+* TODO Create contour objects
+* TODO Training data - from video? multiple images? How?
 * TODO Add click mode stuff
 * TODO Add opening videos
 * Draw rectangles: class matplotlib.patches.Rectangle((x,y), width, height, fill=False)
