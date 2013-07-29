@@ -46,7 +46,7 @@ class gui:
         myscreen=gtk.gdk.Screen()
         self.screensize=(myscreen.get_width(),myscreen.get_height())
         print self.screensize
-        dic={"mainwindowdestroy" : gtk.main_quit,"openwindow":self.openWindow, "closewindow":self.closeWindow, "devicenumchanged":self.changeDeviceNumber, "btnclicked":self.btnclicked, "fileset":self.fileSet, "mctoolbarbtn":self.mctoolbarClicked}
+        dic={"mainwindowdestroy" : gtk.main_quit,"openwindow":self.openWindow, "closewindow":self.closeWindow, "devicenumchanged":self.changeDeviceNumber, "btnclicked":self.btnclicked, "fileset":self.fileSet, "mctoolbarbtn":self.mctoolbarClicked, "trkeypress":self.getKeyPress}
         self.builder.connect_signals(dic)
 
         #Initialise defaults
@@ -90,6 +90,8 @@ class gui:
         self.figuretr=Figure()
         self.axistr=self.figuretr.add_subplot(111)
         self.trframe=0
+        self.trtotal=0
+        self.trdict={}
 
     #General functions
     def fileSet(self, widget):
@@ -148,12 +150,15 @@ class gui:
             self.setClickMode("none")
             self.builder.get_object("tagwindow").set_visible(0)
         elif call=="trnext":
-            self.trframe+=1
-            self.updateTrainingDataWindow()
+            if self.trframe<(self.trtotal-1):
+                self.trframe+=1
+                
+                self.updateTrainingDataWindow()
 
         elif call=="trprev":
-            self.trframe+=1
-            self.updateTrainingDataWindow()
+            if self.trframe>0:
+                self.trframe-=1
+                self.updateTrainingDataWindow()
 
     def openWindow(self, widget):
 
@@ -324,10 +329,11 @@ class gui:
                         temp3=temp2[br2[1]:br2[1]+br2[3], br2[0]:br2[0]+br2[2]]
                         charray=temp3.copy()
                         charray=imresize(charray, dsize)
-                        dlist.append((charray, br[0]+br2[0], br[1]))
+                        #dlist.append((charray, br[0]+br2[0], br[1]))
 
                         if br2[2]>10 and br2[3]>10:
                             #cv2.rectangle(b, (br[0]+br2[0],br[1]+br2[1]), (br[0]+br2[0]+br2[2],br[1]+br2[1]+br2[3]), 100)
+                            dlist.append((charray, br[0]+br2[0], br[1]))
                             rlist.append(((br[0]+br2[0], br[1]+br2[1]), br2[2], br2[3]))
 
 
@@ -503,9 +509,11 @@ class gui:
             #self.dlist.append(cont.ditem[0])
         for i in range(len(self.rlist)):
             for cont in self.contours:
-                if self.rlist[i]==cont.ritem:
+                #if self.rlist[i]==cont.ritem:
+                if np.abs(self.rlist[i][0][0]-cont.ritem[0][0])<=4 and np.abs(self.rlist[i][0][1]-cont.ritem[0][1])<=4:
                     self.trdlist.append(self.dlist[i])
-                    #TODO CANNOT USE EXACT EQUALITY HERE
+                    self.trtotal+=1
+                    #could add width, height check as well
 
         #update display
         self.updateTrainingDataWindow()
@@ -523,11 +531,31 @@ class gui:
         self.canvastr.draw()
         self.canvastr.show()
         self.builder.get_object("bvbox3").pack_start(self.canvastr, True, True)
+        #update labels
         #TODO fix this
-
         #bvbox3
         #trframecount
         #trcursol
+
+    def getKeyPress(self, widget, event):
+        #GTKwidget keyreleaseevent
+        print event.keyval
+        #if event.keyval==65307: #ESC key pressed
+        if event.keyval==48: 
+            #0
+        elif event.keyval==49: 
+        elif event.keyval==50: 
+        elif event.keyval==51: 
+        elif event.keyval==52: 
+        elif event.keyval==53: 
+        elif event.keyval==54: 
+        elif event.keyval==55: 
+        elif event.keyval==56: 
+        elif event.keyval==57:
+            #9
+        elif event.keyval==45:
+            #-
+            
 
 #Main loop:
 if __name__ == "__main__":
