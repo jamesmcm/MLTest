@@ -19,6 +19,9 @@
 ** Each digit is identified successfully, this should be trivial
 
 * Plan:
+* TODO Change from using equality for rlist
+* TODO Fix frame changing
+* TODO Add ability to specify digit
 * TODO Add tags for each contour - make more visible later
 * TODO Create contour objects
 * TODO Training data - from video? multiple images? How?

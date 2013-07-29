@@ -30,8 +30,9 @@ def reversetuple((a,b)):
     return (b,a)
 
 class Contour(object):
-    def __init__(self, ritem, label):
+    def __init__(self, ditem, ritem, label):
         #Set label, position, etc.
+        self.ditem=ditem
         self.ritem=ritem
         self.label=label
         
@@ -85,6 +86,7 @@ class gui:
 
         self.contours=[]
         self.dlist=[]
+        self.trdlist=[]
         self.figuretr=Figure()
         self.axistr=self.figuretr.add_subplot(111)
         self.trframe=0
@@ -141,15 +143,17 @@ class gui:
         elif call=="tagokbtn":
             self.curtag=self.builder.get_object("tagname").get_text()   
             self.builder.get_object("tagwindow").set_visible(0)   
-            self.contours.append(Contour(self.tempitem,self.curtag))
+            self.contours.append(Contour(self.tempditem,self.tempitem,self.curtag))
         elif call=="tagcancelbtn":
             self.setClickMode("none")
             self.builder.get_object("tagwindow").set_visible(0)
         elif call=="trnext":
-            pass
+            self.trframe+=1
+            self.updateTrainingDataWindow()
 
         elif call=="trprev":
-            pass
+            self.trframe+=1
+            self.updateTrainingDataWindow()
 
     def openWindow(self, widget):
 
@@ -264,7 +268,7 @@ class gui:
             #print str(self.crop1)
             #print str(self.crop2)
             a=a[np.min([self.crop1[1],self.crop2[1]]):np.max([self.crop1[1],self.crop2[1]]),np.min([self.crop1[0],self.crop2[0]]):np.max([self.crop1[0],self.crop2[0]])] 
-        (self.monimage,dlist,self.rlist)=self.getContours(a,self.d1size)
+        (self.monimage,self.dlist,self.rlist)=self.getContours(a,self.d1size)
             #TODO add other digit sizes
         self.drawMonitor()
 
@@ -379,7 +383,8 @@ class gui:
                 #Contours checked by rlist?
                 coords=(int(round(event.xdata)), int(round(event.ydata)))
                 found=False
-                for item in self.rlist:
+                for i in range(len(self.rlist)):
+                    item=self.rlist[i]
                     if (coords[0] >= item[0][0]) and (coords[0] <= (item[0][0]+item[1])) and (coords[1] >= item[0][1]) and (coords[1] <= item[0][1]+item[2]):
                         #Found contour, create contour object for final contour list
                         found=True
@@ -387,6 +392,7 @@ class gui:
                 if found==True:
 
                     self.tempitem=item
+                    self.tempditem=self.rlist[i]
                     self.builder.get_object("tagwindow").set_visible(1)
                         #self.contours.append(Contour(item,self.curtag))
                         
@@ -486,11 +492,20 @@ class gui:
             #print str(self.crop1)
             #print str(self.crop2)
             a=a[np.min([self.crop1[1],self.crop2[1]]):np.max([self.crop1[1],self.crop2[1]]),np.min([self.crop1[0],self.crop2[0]]):np.max([self.crop1[0],self.crop2[0]])] 
-        (self.monimage,dlist,self.rlist)=self.getContours(a,self.d1size)
+        (self.monimage,self.dlist,self.rlist)=self.getContours(a,self.d1size)
 
-        for cont in self.contours:
+        #for cont in self.contours:
             #add individual digits to list, then tag list
-            self.dlist.append(self.monimage[cont.ritem[0][1]:cont.ritem[0][1]+cont.ritem[2],cont.ritem[0][0]:cont.ritem[0][0]+cont.ritem[1]])
+            #self.dlist.append(self.monimage[cont.ritem[0][1]:cont.ritem[0][1]+cont.ritem[2],cont.ritem[0][0]:cont.ritem[0][0]+cont.ritem[1]])
+
+        #TODO FIX THIS - need to take ditem of new image, not config one, where the coords are the same
+        #for cont in self.contours:
+            #self.dlist.append(cont.ditem[0])
+        for i in range(len(self.rlist)):
+            for cont in self.contours:
+                if self.rlist[i]==cont.ritem:
+                    self.trdlist.append(self.dlist[i])
+                    #TODO CANNOT USE EXACT EQUALITY HERE
 
         #update display
         self.updateTrainingDataWindow()
@@ -503,11 +518,11 @@ class gui:
         except:
             pass
 
-        self.axistr.imshow(self.dlist[self.trframe], cmap=cm.gray) #set scale to 0,255 somehow
+        self.axistr.imshow(self.trdlist[self.trframe][0], cmap=cm.gray) #set scale to 0,255 somehow
         self.canvastr=FigureCanvasGTKAgg(self.figuretr)
         self.canvastr.draw()
         self.canvastr.show()
-        self.builder.get_object("monitorconfigspace").pack_start(self.canvastr, True, True)
+        self.builder.get_object("bvbox3").pack_start(self.canvastr, True, True)
         #TODO fix this
 
         #bvbox3
