@@ -22,6 +22,8 @@ import gtk
 import cv2
 from scipy.misc import imresize
 
+#TODO Fix uneditable text boxes
+
 #Misc functions
 def CV_FOURCC(c1, c2, c3, c4) :
     return (c1 & 255) + ((c2 & 255) << 8) + ((c3 & 255) << 16) + ((c4 & 255) << 24)
@@ -83,6 +85,12 @@ class gui:
         self.clickstate="none"
         self.crop1=None
         self.crop2=None
+        self.builder.get_object("tolerance").set_editable(True)
+        self.builder.get_object("blocksize").set_editable(True)
+        self.builder.get_object("d1x").set_editable(True)
+        self.builder.get_object("d1y").set_editable(True)
+        self.builder.get_object("d2x").set_editable(True)
+        self.builder.get_object("d2y").set_editable(True)
 
         self.contours=[]
         self.dlist=[]
@@ -91,7 +99,8 @@ class gui:
         self.axistr=self.figuretr.add_subplot(111)
         self.trframe=0
         self.trtotal=0
-        self.trdict={}
+        self.traindict={}
+        self.solsdict={}
 
     #General functions
     def fileSet(self, widget):
@@ -150,16 +159,18 @@ class gui:
             self.setClickMode("none")
             self.builder.get_object("tagwindow").set_visible(0)
         elif call=="trnext":
-            if self.trframe<(self.trtotal-1):
-                self.trframe+=1
-                
-                self.updateTrainingDataWindow()
+            self.trNext()
 
         elif call=="trprev":
             if self.trframe>0:
                 self.trframe-=1
                 self.updateTrainingDataWindow()
 
+    def trNext(self):
+        if self.trframe<(self.trtotal-1):
+            self.trframe+=1    
+            self.updateTrainingDataWindow()
+        
     def openWindow(self, widget):
 
         #Make dict of widgets to functions
@@ -531,31 +542,31 @@ class gui:
         self.canvastr.draw()
         self.canvastr.show()
         self.builder.get_object("bvbox3").pack_start(self.canvastr, True, True)
-        #update labels
-        #TODO fix this
+        self.builder.get_object("trframecount").set_label(str(self.trframe+1) + "/" + str(self.trtotal))
+        #self.builder.get_object("trcursol").set_label(str(self.trframe+1) + "/" + str(self.trtotal))
+        
+        #TODO update labels
         #bvbox3
         #trframecount
         #trcursol
 
     def getKeyPress(self, widget, event):
+        #TODO training
         #GTKwidget keyreleaseevent
-        print event.keyval
-        #if event.keyval==65307: #ESC key pressed
-        if event.keyval==48: 
-            #0
-        elif event.keyval==49: 
-        elif event.keyval==50: 
-        elif event.keyval==51: 
-        elif event.keyval==52: 
-        elif event.keyval==53: 
-        elif event.keyval==54: 
-        elif event.keyval==55: 
-        elif event.keyval==56: 
-        elif event.keyval==57:
-            #9
-        elif event.keyval==45:
-            #-
-            
+        ci=event.keyval
+        ci=ci-48
+        data=self.trdlist[self.trframe][0]
+        if event.keyval==45:
+            #set to not a number
+            self.trNext()
+        elif ci in [0,1,2,3,4,5,6,7,8,9]:
+            if ci in self.traindict.keys():
+                self.traindict[ci]+=data
+                self.traindict[ci]/=2.0
+                self.trNext()
+            else:
+                self.traindict[ci]=data
+                self.trNext()
 
 #Main loop:
 if __name__ == "__main__":
