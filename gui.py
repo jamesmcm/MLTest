@@ -22,7 +22,9 @@ import gtk
 import cv2
 from scipy.misc import imresize
 
-#TODO Fix uneditable text boxes
+#TODO Add classifier and output
+#TODO Add ability to save classifier pickle
+#TODO Add second digit size
 
 #Misc functions
 def CV_FOURCC(c1, c2, c3, c4) :
@@ -165,6 +167,38 @@ class gui:
             if self.trframe>0:
                 self.trframe-=1
                 self.updateTrainingDataWindow()
+        elif call=="savetrdata":
+            fn=self.builder.get_object("trfile").get_text()
+            f=open(fn, "w")
+            pickle.dump(self.traindict, f)
+            f.close()
+        elif call=="liverecord":
+            #start loop to get data
+            fn=self.builder.get_object("livefile").get_text()
+            f=open(fn,"r")
+            #log to f
+
+            while True:
+                #get image using current camera config
+                ret,im=self.cap.read()
+                #run contour detection
+                (self.monimage,self.dlist,self.rlist)=self.getContours(a,self.d1size)
+                #take only labelled ones
+                for i in range(len(self.rlist)):
+                    for cont in self.contours:
+                        #if self.rlist[i]==cont.ritem:
+                        #TODO remove hidden parameters here
+                        if np.abs(self.rlist[i][0][0]-cont.ritem[0][0])<=4 and np.abs(self.rlist[i][0][1]-cont.ritem[0][1])<=4:
+                            #Need to append x position, label
+                            self.livelist.append(self.dlist[i])
+                    #could add width, height check as well
+                
+                #run digit analysis
+
+                #reconstruct labelled data
+
+                #log to f
+
 
     def trNext(self):
         if self.trframe<(self.trtotal-1):
@@ -185,8 +219,8 @@ class gui:
             self.builder.get_object("monitorconfig").set_visible(1)
         elif call=="opentrainingdatawindow": 
             self.builder.get_object("trainingdatawindow").set_visible(1)
-
-
+        elif call=="openlive": 
+            self.builder.get_object("livewindow").set_visible(1)
     def closeWindow(self,widget):
         call=gtk.Buildable.get_name(widget)
         if call=="closecameraconfig":
@@ -197,7 +231,10 @@ class gui:
             self.builder.get_object("videosavewindow").set_visible(0)
         elif call=="closemonitorconfig":
             self.builder.get_object("monitorconfig").set_visible(0)
-
+        elif call=="closetrainingwindow":
+            self.builder.get_object("trainingdatawindow").set_visible(0)
+        elif call=="closelive":
+            self.builder.get_object("livewindow").set_visible(0)
 
     #Camera config functions
     def openCameraConfig(self):
@@ -521,6 +558,7 @@ class gui:
         for i in range(len(self.rlist)):
             for cont in self.contours:
                 #if self.rlist[i]==cont.ritem:
+                #TODO remove hidden parameters here
                 if np.abs(self.rlist[i][0][0]-cont.ritem[0][0])<=4 and np.abs(self.rlist[i][0][1]-cont.ritem[0][1])<=4:
                     self.trdlist.append(self.dlist[i])
                     self.trtotal+=1
@@ -555,11 +593,11 @@ class gui:
         #GTKwidget keyreleaseevent
         ci=event.keyval
         ci=ci-48
-        data=self.trdlist[self.trframe][0]
         if event.keyval==45:
             #set to not a number
             self.trNext()
         elif ci in [0,1,2,3,4,5,6,7,8,9]:
+            data=self.trdlist[self.trframe][0].flatten()
             if ci in self.traindict.keys():
                 self.traindict[ci]+=data
                 self.traindict[ci]/=2.0
@@ -567,6 +605,69 @@ class gui:
             else:
                 self.traindict[ci]=data
                 self.trNext()
+
+    def sumpmtestlive(self):
+        rl={}
+
+        for item2 in dlist:
+            item=item2[0]
+            q=False
+            data = np.zeros((esize), dtype=np.uint8)
+        #results=[]
+        #err=[]
+            data=item.flatten()
+            boolarray=(data>pixelthreshold)
+            resultd=[]
+            #print tdict.keys()
+            for j in range(len(tdict.keys())):
+                result=np.sum(tdict[j][boolarray])
+                #penalisation factor
+                result-=4*np.sum(tdict[j][data<=pixelthreshold])
+                resultd.append(result/float(esize))
+            #print resultd
+            # sr=reversed(sorted(resultd))
+            # srlist=[]
+            # for j in sr:
+            #     srlist.append(j)
+            # err.append(srlist[0]-srlist[1])
+            resultf=(resultd.index(max(resultd)))
+            #print resultf
+            if max(resultd)<-0.1:
+                #print "IGNORE!"
+                q=True
+
+            #print "---"
+            #cv2.imshow("newtest",item)
+            #cv2.waitKey(0)
+            #Append digit to correct place
+            #rl = {y:{x:(1,q)}}
+
+            if item2[2] in rl.keys():
+                rl[item2[2]][item2[1]]=(resultf, q)
+            else:
+                rl[item2[2]]={item2[1]:(resultf,q)}
+
+        string=""
+        for key in sorted(rl.iterkeys()):
+            #print "%s: %s" % (key, mydict[key]) 
+
+            for key2 in sorted(rl[key].iterkeys()):
+                if rl[key][key2][1]==False:
+                    string+=str(rl[key][key2][0])
+                #if rl[key][key2][1]==True:
+                    #string+="?"
+            string+=" "
+
+        print string
+
+        #only get ones with labels
+        for i in range(len(self.rlist)):
+            for cont in self.contours:
+                #if self.rlist[i]==cont.ritem:
+                if np.abs(self.rlist[i][0][0]-cont.ritem[0][0])<=4 and np.abs(self.rlist[i][0][1]-cont.ritem[0][1])<=4:
+                    self.trdlist.append(self.dlist[i])
+                    self.trtotal+=1
+
 
 #Main loop:
 if __name__ == "__main__":
