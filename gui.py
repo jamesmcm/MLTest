@@ -119,7 +119,7 @@ class gui:
         elif call=="imagesavebtn":
             fname=self.builder.get_object("imagesavetext").get_text()
             if fname!="" and fname!=None:
-                self.saveImage()
+                self.saveImage(fname)
         elif call=="videosavebtn":
             fname=self.builder.get_object("videosavefile").get_text()
             if fname!="" and fname!=None:

@@ -19,13 +19,22 @@
 ** Each digit is identified successfully, this should be trivial
 
 * Plan:
+* 1920, 1080
+* 27, 3, 40, 30
+* Dixtal monitor: angle change is bad, but affects reds, blue much more than white
+* Fix window problems - modal? urgent?
+* TODO Deal with fact numbers shown may change?
+* TODO Add window to view all conoturs - unfiltered
+* TODO Try forcing to size of known training set? Neural network?
+* TODO Adapt for different brightness/colours in frames?
+* TODO Write filters for different colours
 * TODO Change from using equality for rlist
-* TODO Fix frame changing
-* TODO Add ability to specify digit
-* TODO Add tags for each contour - make more visible later
-* TODO Create contour objects
-* TODO Training data - from video? multiple images? How?
-* TODO Add click mode stuff
+* DONE Fix frame changing
+* DONE Add ability to specify digit
+* DONE Add tags for each contour - make more visible later
+* DONE Create contour objects
+* DONE Training data - from video? multiple images? How?
+* DONE Add click mode stuff
 * TODO Add opening videos
 * Draw rectangles: class matplotlib.patches.Rectangle((x,y), width, height, fill=False)
 * gca().add_patch(Rectangle((1,1),1,1))
@@ -34,18 +43,18 @@
 * TODO Add code for additional digit passes
 * TODO Crop image by clicking two points
 * TODO Finish setting parameter redraws
-* TODO Add click modes
+* DONE Add click modes
 * TODO Make hitting escape clear click mode
-* TODO Make tag popup
+* DONE Make tag popup
 * TODO Add contour by clicking two points
 * TODO Remove contour by clicking with in
 * TODO Split contour by clicking at split point
 * TODO Add code for automatically splitting merged digits
-* TODO Add ability to crop image and store that
+* DONE Add ability to crop image and store that
 * TODO Split in to separate files
-* TODO Draw contours directly in colour using numpy
+* DONE Draw contours directly in colour using numpy
 * TODO Intelligently set window sizes - allow resize?
-* TODO Don't resize but use zoom with toolbar
+* DONE Don't resize but use zoom with toolbar
 * TODO Bypass segfaulting using numpy imshow and keypress as in tesiapp
 * TODO Better way of getting full training set - perhaps via frames?
 * TODO Wire up monitor config
