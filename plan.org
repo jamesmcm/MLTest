@@ -22,13 +22,20 @@
 * 1920, 1080
 * 27, 3, 40, 30
 * Dixtal monitor: angle change is bad, but affects reds, blue much more than white
-* Fix window problems - modal? urgent?
-* TODO Deal with fact numbers shown may change?
+* TODO Maintain aspect ratio of contours
+* TODO Make double analysis an option or not - only necessary if bubble writing, depends on sizes
+* TODO Make wiggle room on sizes an editable variable
+* TODO Fix cropping issue on new images?
+* TODO Add clever way of producing, skewed/rotated rectangles from contours with same dimensionality
+* TODO Fix window problems - modal? urgent?
+* TODO Fix save image not taking new image
 * TODO Add window to view all conoturs - unfiltered
+* TODO Add rectangle click to set digit size
+* TODO Deal with fact numbers shown may change?
 * TODO Try forcing to size of known training set? Neural network?
 * TODO Adapt for different brightness/colours in frames?
 * TODO Write filters for different colours
-* TODO Change from using equality for rlist
+* TODO Change from using equality for rlist - remove hidden parameters
 * DONE Fix frame changing
 * DONE Add ability to specify digit
 * DONE Add tags for each contour - make more visible later

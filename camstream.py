@@ -9,7 +9,7 @@ def reversetuple((a,b)):
 def CV_FOURCC(c1, c2, c3, c4) :
     return (c1 & 255) + ((c2 & 255) << 8) + ((c3 & 255) << 16) + ((c4 & 255) << 24)
 
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 #cap.set(3,1920)
 #cap.set(4,1080)
 
