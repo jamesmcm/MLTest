@@ -332,7 +332,21 @@ Configuration</property>
           </packing>
         </child>
         <child>
-          <placeholder/>
+          <object class="GtkButton" id="opentmc">
+            <property name="label" translatable="yes">Test Monitor
+Configuration</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <property name="use_action_appearance">False</property>
+            <signal name="clicked" handler="openwindow" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left_attach">2</property>
+            <property name="right_attach">3</property>
+            <property name="top_attach">3</property>
+            <property name="bottom_attach">4</property>
+          </packing>
         </child>
       </object>
     </child>
@@ -947,6 +961,21 @@ Configuration</property>
               </packing>
             </child>
             <child>
+              <object class="GtkButton" id="allconts">
+                <property name="label" translatable="yes">Display all contours</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_action_appearance">False</property>
+                <signal name="clicked" handler="btnclicked" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">8</property>
+              </packing>
+            </child>
+            <child>
               <object class="GtkButton" id="getdigitsize">
                 <property name="label" translatable="yes">Get digit1 size</property>
                 <property name="visible">True</property>
@@ -958,7 +987,22 @@ Configuration</property>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">False</property>
-                <property name="position">8</property>
+                <property name="position">9</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="clearunsaved">
+                <property name="label" translatable="yes">Clear untagged contours</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_action_appearance">False</property>
+                <signal name="clicked" handler="btnclicked" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">10</property>
               </packing>
             </child>
             <child>
@@ -999,7 +1043,7 @@ Configuration</property>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">False</property>
-                <property name="position">9</property>
+                <property name="position">11</property>
               </packing>
             </child>
             <child>
@@ -1014,7 +1058,7 @@ Configuration</property>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">False</property>
-                <property name="position">10</property>
+                <property name="position">12</property>
               </packing>
             </child>
             <child>
@@ -1029,7 +1073,7 @@ Configuration</property>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">False</property>
-                <property name="position">11</property>
+                <property name="position">13</property>
               </packing>
             </child>
             <child>
@@ -1044,7 +1088,7 @@ Configuration</property>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">False</property>
-                <property name="position">12</property>
+                <property name="position">14</property>
               </packing>
             </child>
             <child>
@@ -1059,7 +1103,7 @@ Configuration</property>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">False</property>
-                <property name="position">13</property>
+                <property name="position">15</property>
               </packing>
             </child>
             <child>
@@ -1074,7 +1118,7 @@ Configuration</property>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">False</property>
-                <property name="position">14</property>
+                <property name="position">16</property>
               </packing>
             </child>
             <child>
@@ -1089,7 +1133,7 @@ Configuration</property>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">False</property>
-                <property name="position">15</property>
+                <property name="position">17</property>
               </packing>
             </child>
             <child>
@@ -1105,7 +1149,7 @@ Configuration</property>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">False</property>
-                <property name="position">16</property>
+                <property name="position">18</property>
               </packing>
             </child>
           </object>
@@ -1192,6 +1236,59 @@ Configuration</property>
                 <property name="position">1</property>
               </packing>
             </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </object>
+  <object class="GtkWindow" id="testmcwindow">
+    <property name="can_focus">False</property>
+    <child>
+      <object class="GtkVBox" id="tcvbox1">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <child>
+          <object class="GtkFileChooserButton" id="testmcfile">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <signal name="file-set" handler="fileset" swapped="no"/>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkVBox" id="tmcspace">
+            <property name="width_request">640</property>
+            <property name="height_request">480</property>
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <child>
+              <placeholder/>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="closetc">
+            <property name="label">gtk-close</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <property name="use_action_appearance">False</property>
+            <property name="use_stock">True</property>
+            <signal name="clicked" handler="closewindow" swapped="no"/>
           </object>
           <packing>
             <property name="expand">False</property>

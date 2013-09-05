@@ -52,6 +52,7 @@ class gui:
     """Main application class."""
     def __init__(self):
         self.builder=gtk.Builder()
+        self.dsizes=[]
         self.builder.add_from_file("gladeb.glade")
         myscreen=gtk.gdk.Screen()
         self.screensize=(myscreen.get_width(),myscreen.get_height())
@@ -90,6 +91,8 @@ class gui:
         self.builder.get_object("d1y").set_text("80")
         self.figuremc=Figure()
         self.axismc=self.figuremc.add_subplot(111)
+        self.figuretmc=Figure()
+        self.axistmc=self.figuretmc.add_subplot(111)
         self.mcflipx=False
         self.mcflipy=False
         self.clickstate="none"
@@ -119,6 +122,8 @@ class gui:
             self.loadMonitorImage(widget.get_filename())
         elif call=="trainingfilechooser":
             self.loadTrainingImage(widget.get_filename())
+        elif call=="testmcfile":
+            self.loadMonitorImage(widget.get_filename(), testmc=True)
 
     def btnclicked(self, widget):
         call=gtk.Buildable.get_name(widget)
@@ -167,6 +172,8 @@ class gui:
             self.curtag=self.builder.get_object("tagname").get_text()   
             self.builder.get_object("tagwindow").set_visible(0)   
             self.contours.append(Contour(self.tempditem,self.tempitem,self.curtag))
+            if not (self.d1size in self.dsizes):
+                self.dsizes.append(self.d1size)
         elif call=="tagcancelbtn":
             self.setClickMode("none")
             self.builder.get_object("tagwindow").set_visible(0)
@@ -182,7 +189,16 @@ class gui:
             f=open(fn, "w")
             pickle.dump(self.traindict, f)
             f.close()
+        elif call=="allconts":
+            #show all contours in monitor config window
+            self.loadMonitorImage(self.builder.get_object("monitorconfigloadfile").get_filename(), allconts=True)
+            
+        elif call=="clearunsaved":
+            #redraw only those ritems in self.contours
+            self.drawMonitor(clearunsaved=True)
+            
         elif call=="liverecord":
+            #TODO test? Fix all parameters here
             #start loop to get data
             fn=self.builder.get_object("livefile").get_text()
             f=open(fn,"r")
@@ -289,6 +305,9 @@ class gui:
             self.builder.get_object("trainingdatawindow").set_visible(1)
         elif call=="openlive": 
             self.builder.get_object("livewindow").set_visible(1)
+        elif call=="opentmc":
+            self.builder.get_object("testmcwindow").set_visible(1)
+
     def closeWindow(self,widget):
         call=gtk.Buildable.get_name(widget)
         if call=="closecameraconfig":
@@ -303,7 +322,8 @@ class gui:
             self.builder.get_object("trainingdatawindow").set_visible(0)
         elif call=="closelive":
             self.builder.get_object("livewindow").set_visible(0)
-
+        elif call=="closetc":
+            self.builder.get_object("testmcwindow").set_visible(0)
     #Camera config functions
     def openCameraConfig(self):
         try:
@@ -369,9 +389,9 @@ class gui:
         #TODO: May want to chuck away last frame - perhaps do this in analysis
 
     #Monitor configuration
-    def loadMonitorImage(self,fname):
+    def loadMonitorImage(self,fname, allconts=False, testmc=False):
         if fname[-4:].lower()==".avi":
-            #get first frame - look this up
+            #TODO get first frame - look this up
             pass
         elif fname[-4:].lower()==".png" or fname[-4:].lower()==".jpg":
             a=cv2.imread(fname, 0) #note 0 implies grayscale
@@ -389,9 +409,21 @@ class gui:
             #print str(self.crop1)
             #print str(self.crop2)
             a=a[np.min([self.crop1[1],self.crop2[1]]):np.max([self.crop1[1],self.crop2[1]]),np.min([self.crop1[0],self.crop2[0]]):np.max([self.crop1[0],self.crop2[0]])] 
-        (self.monimage,self.dlist,self.rlist)=self.getContours(a,self.d1size)
+
             #TODO add other digit sizes
-        self.drawMonitor()
+        if testmc==True:
+            self.trlist=[]
+            for dsize in self.dsizes:
+                (self.tmonimage,self.dlist,rlist)=self.getContours(a,dsize)
+                self.trlist+=rlist
+            self.drawMonitorTest()
+        else:
+            if allconts==False:
+                (self.monimage,self.dlist,self.rlist)=self.getContours(a,self.d1size)
+                self.drawMonitor()
+            else:
+                (self.monimage,self.rlist1,self.rlist2)=self.getAllContours(a)
+                self.drawMonitor(allconts=True)
 
     def setParameters(self):
         self.tolerance=int(self.builder.get_object("tolerance").get_text())
@@ -428,14 +460,16 @@ class gui:
             charray=np.zeros(dsize, dtype=np.uint8)
             temp=b[br[1]:br[1]+br[3], br[0]:br[0]+br[2]]
 
-            if temp.shape[0]>30 and temp.shape[1]>30:
+            if temp.shape[0]>10 and temp.shape[1]>10:
                 temp=cv2.bitwise_not(temp)
                 temp2=temp.copy()
                 contours2, hierarchy = cv2.findContours(temp2, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
                 for cont2 in contours2:
                     br2=cv2.boundingRect(cont2)
-
-                    if br2[3]<dsize[0]+10 and br2[3]>dsize[0]-10 and br2[2]<dsize[1]+10 and br2[2]>dsize[1]-50 and br2[0]>0+(temp.shape[1]/30) and br2[0]<temp.shape[1]-(temp.shape[1]/5):
+                    #important hidden parameters
+                    if br2[3]<dsize[0]+20 and br2[3]>dsize[0]-20 and br2[2]<dsize[1]+20 and br2[2]>dsize[1]-60:
+                        #After cropping, edge constrains not necessary
+                        # and br2[0]>0+(temp.shape[1]/40.0) and br2[0]<temp.shape[1]-(temp.shape[1]/40.0)
                         mask = np.zeros(temp2.shape, dtype=np.uint8)
                         cv2.drawContours(mask,[cont2],0,255,-1)
 
@@ -447,7 +481,7 @@ class gui:
                         charray=imresize(charray, dsize)
                         #dlist.append((charray, br[0]+br2[0], br[1]))
 
-                        if br2[2]>10 and br2[3]>10:
+                        if br2[2]>5 and br2[3]>5:
                             #cv2.rectangle(b, (br[0]+br2[0],br[1]+br2[1]), (br[0]+br2[0]+br2[2],br[1]+br2[1]+br2[3]), 100)
                             dlist.append((charray, br[0]+br2[0], br[1]))
                             rlist.append(((br[0]+br2[0], br[1]+br2[1]), br2[2], br2[3]))
@@ -455,7 +489,50 @@ class gui:
 
         return (b,dlist,rlist)
 
-    def drawMonitor(self):
+    def getAllContours(self,a):
+        a=cv2.GaussianBlur(a,(3,3), 0)
+        orig=a.copy()
+        a=cv2.adaptiveThreshold(a, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, self.tolerance, self.blocksize)
+        b=a.copy()
+        contours, hierarchy = cv2.findContours(a, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_TC89_KCOS)
+        mask = np.zeros(a.shape, dtype=np.uint8)
+
+        output=np.zeros(b.shape,dtype=np.uint8)
+        rlist1=[]
+        rlist2=[]
+        for cont in contours:
+
+            br=cv2.boundingRect(cont)
+            rlist1.append(((br[0], br[1]), br[2], br[3]))
+            temp=b[br[1]:br[1]+br[3], br[0]:br[0]+br[2]]
+
+            if temp.shape[0]>5 and temp.shape[1]>5:
+                temp=cv2.bitwise_not(temp)
+                temp2=temp.copy()
+                contours2, hierarchy = cv2.findContours(temp2, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
+                for cont2 in contours2:
+                    br2=cv2.boundingRect(cont2)
+
+                    #if br2[3]<dsize[0]+10 and br2[3]>dsize[0]-10 and br2[2]<dsize[1]+10 and br2[2]>dsize[1]-50 and br2[0]>0+(temp.shape[1]/30) and br2[0]<temp.shape[1]-(temp.shape[1]/5):
+                    mask = np.zeros(temp2.shape, dtype=np.uint8)
+                    cv2.drawContours(mask,[cont2],0,255,-1)
+
+                    temp2=temp.copy()
+                    temp2[mask==0]=0
+
+                    temp3=temp2[br2[1]:br2[1]+br2[3], br2[0]:br2[0]+br2[2]]
+                    #dlist.append((charray, br[0]+br2[0], br[1]))
+
+                    if br2[2]>3 and br2[3]>3:
+                        #cv2.rectangle(b, (br[0]+br2[0],br[1]+br2[1]), (br[0]+br2[0]+br2[2],br[1]+br2[1]+br2[3]), 100)
+                        #dlist.append((charray, br[0]+br2[0], br[1]))
+                        rlist2.append(((br[0]+br2[0], br[1]+br2[1]), br2[2], br2[3]))
+
+
+        return (b,rlist1, rlist2)
+
+
+    def drawMonitor(self, allconts=False, clearunsaved=False):
         try:
             self.builder.get_object("monitorconfigspace").remove(self.canvasmc)
             self.axismc.clear()
@@ -475,15 +552,76 @@ class gui:
         self.canvasmc.mpl_connect('button_release_event', self.mcCaptureClick)
 
         self.builder.get_object("monitorconfigspace").pack_start(self.canvasmc, True, True)
-        for item in self.rlist:
-            #Structure of rlist:
-            #rlist.append(((br[0]+br2[0], br[1]+br2[1]), br2[2], br2[3]))
-            r=Rectangle(item[0], item[1], item[2], fill=False, color="red")
-            #Rectangle has (lowerleft, width, height)
+
+        #TODO stop this getting so complicated
+        if clearunsaved==False:
+            if allconts==False:
+                for item in self.rlist:
+                    #Structure of rlist:
+                    #rlist.append(((br[0]+br2[0], br[1]+br2[1]), br2[2], br2[3]))
+                    r=Rectangle(item[0], item[1], item[2], fill=False, color="red")
+                    #Rectangle has (lowerleft, width, height)
+                    self.axismc.add_patch(r)               
+            elif allconts==True:
+                #allcontours
+                for item in self.rlist1:
+                    #Structure of rlist:
+                    #rlist.append(((br[0]+br2[0], br[1]+br2[1]), br2[2], br2[3]))
+                    r=Rectangle(item[0], item[1], item[2], fill=False, color="blue")
+                    #Rectangle has (lowerleft, width, height)
+                    self.axismc.add_patch(r)
+                for item in self.rlist2:
+                    #Structure of rlist:
+                    #rlist.append(((br[0]+br2[0], br[1]+br2[1]), br2[2], br2[3]))
+                    r=Rectangle(item[0], item[1], item[2], fill=False, color="green")
+                    #Rectangle has (lowerleft, width, height)
+                    self.axismc.add_patch(r)
+
+        #Always draw saved contours in blue
+        for ditem in self.contours:
+            item=ditem.ritem
+            r=Rectangle(item[0], item[1], item[2], fill=False, color="blue")
             self.axismc.add_patch(r)
-        
+
+
+    def drawMonitorTest(self):
+        try:
+            self.builder.get_object("tmcspace").remove(self.canvastmc)
+            self.axistmc.clear()
+        except:
+            pass
+        #Add cropping
+        self.axistmc.imshow(self.tmonimage, cmap=cm.gray) #set scale to 0,255 somehow
+
+        #Maybe this needn't be redefined for every draw - only need draw() but not drawn often anyway
+        self.canvastmc=FigureCanvasGTKAgg(self.figuretmc)
+
+        self.canvastmc.draw()
+        self.canvastmc.show()
+        self.builder.get_object("tmcspace").pack_start(self.canvastmc, True, True)
+
+
+        for i in range(len(self.trlist)):
+            for cont in self.contours:
+                #if self.rlist[i]==cont.ritem:
+                #TODO remove hidden parameters here
+                if np.abs(self.trlist[i][0][0]-cont.ritem[0][0])<=4 and np.abs(self.trlist[i][0][1]-cont.ritem[0][1])<=4:
+                    item=self.trlist[i]
+                    r=Rectangle(item[0], item[1], item[2], fill=False, color="blue")
+                    self.axistmc.add_patch(r)
+                    #could add width, height check as well
+
+        #Always draw saved contours in blue
+        for ditem in self.contours:
+            item=ditem.ritem
+
+
 
     def mcHoverOnImage(self, event):
+        #add contour stuff here if not too expensive
+        #find innermost contour
+        #Cannot afford to redraw, must work out how to remove rectangle afterwards since only one at a time
+        #TODO
         if event.x!=None and event.y!=None and event.xdata!=None and event.ydata!=None:
             pass
         
@@ -520,17 +658,24 @@ class gui:
                 #Check if we are inside contour, if so present label window, if not, ignore
                 #Contours checked by rlist?
                 coords=(int(round(event.xdata)), int(round(event.ydata)))
-                found=False
+                #found=False
+                #Find innermost not just first contour
+                fitem=None
+                fi=None
                 for i in range(len(self.rlist)):
                     item=self.rlist[i]
                     if (coords[0] >= item[0][0]) and (coords[0] <= (item[0][0]+item[1])) and (coords[1] >= item[0][1]) and (coords[1] <= item[0][1]+item[2]):
                         #Found contour, create contour object for final contour list
-                        found=True
-                        break
-                if found==True:
-
-                    self.tempitem=item
-                    self.tempditem=self.rlist[i]
+                        if fitem==None:
+                            fitem=item
+                            fi=i
+                        else:
+                            if (item[0][0] >= fitem[0][0]) and (item[0][0]+item[1] <= (fitem[0][0]+fitem[1])) and (item[0][1] >= fitem[0][1]) and (item[0][1]+item[2] <= fitem[0][1]+fitem[2]):
+                                fitem=item
+                                fi=i
+                if fitem!=None:
+                    self.tempitem=fitem
+                    self.tempditem=self.rlist[fi]
                     self.builder.get_object("tagwindow").set_visible(1)
                         #self.contours.append(Contour(item,self.curtag))
                         

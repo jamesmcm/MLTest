@@ -21,21 +21,38 @@
 * Plan:
 * 1920, 1080
 * 27, 3, 40, 30
+* High tolerance, low block size tends to work well?
 * Dixtal monitor: angle change is bad, but affects reds, blue much more than white
+* TODO Fix generalisation - use known digit size, stricter rules to allow more leniency in motion/shape change
+* TODO Allow for larger variation in size, position i.e. 1 changes to 5, etc.
+* TODO Add way of saving MC parameters
+* DONE Add code to find innermost contour we are within
+* TODO Implement test monitor config - can we reconstruct correct boxes for new images (necessary for getting training data anyways)
+* TODO Update getting training data code - must loop through self.dsizes
+* TODO Deal with contours inside contours - implement hovering colours
+* TODO Add button to clear unsaved contours, then add new digit sizes repeatedly
+* TODO Tidy interface to only save wanted contours - how to avoid too many contours? Check for closest position and aspect ratio somehow
+* TODO Crop background from found digits to force centering - segmentation
+* TODO Add stuff to add/remove contours without refreshing?
+* DONE Fix hidden parameters to fix right 1 p16, etc.
+* TODO Add support for at least 3 different digit sizes (upscaling or downscaling? or middlescaling?)
+* DONE Write button to view all contours
+* TODO Implement homography to fix skew, rotation in image
+* TODO Aritficial data generation?
 * TODO Maintain aspect ratio of contours
 * TODO Make double analysis an option or not - only necessary if bubble writing, depends on sizes
 * TODO Make wiggle room on sizes an editable variable
 * TODO Fix cropping issue on new images?
 * TODO Add clever way of producing, skewed/rotated rectangles from contours with same dimensionality
-* TODO Fix window problems - modal? urgent?
+* DONE Fix window problems - modal? urgent?
 * TODO Fix save image not taking new image
-* TODO Add window to view all conoturs - unfiltered
-* TODO Add rectangle click to set digit size
+* DONE Add window to view all conoturs - unfiltered
+* DONE Add rectangle click to set digit size
 * TODO Deal with fact numbers shown may change?
 * TODO Try forcing to size of known training set? Neural network?
 * TODO Adapt for different brightness/colours in frames?
 * TODO Write filters for different colours
-* TODO Change from using equality for rlist - remove hidden parameters
+* TODO Change from using equality for rlist matching - remove hidden parameters
 * DONE Fix frame changing
 * DONE Add ability to specify digit
 * DONE Add tags for each contour - make more visible later
